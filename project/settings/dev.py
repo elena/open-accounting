@@ -19,18 +19,21 @@ DATABASES = {
 
 # Debug toolbar
 
+
+MIDDLEWARE += [
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
+]
+
 INSTALLED_APPS += (
-    'debug_toolbar.apps.DebugToolbarConfig',
+    'debug_toolbar',
 )
+
+INTERNAL_IPS = ['127.0.0.1']
 
 
 # Emailing
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-MIDDLEWARE += [
-    'debug_toolbar.middleware.DebugToolbarMiddleware',
-]
 
 # Logging
 

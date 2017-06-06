@@ -32,13 +32,13 @@ ELEMENTS = (
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
-    # CHART of ACCOUNTS (CofA)
+# CHART of ACCOUNTS (CofA)
 
-    ## Classifying and organising.
+## Classifying and organising.
 
-    ## Set up once, refined and then rarely modifed afterwards.
+## Set up once, refined and then rarely modifed afterwards.
 
-    ## Referred to for the purpose of reporting and categorising Transaction Items
+## Referred to for the purpose of reporting and categorising Transaction Items
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
@@ -75,11 +75,11 @@ class Account(models.Model):
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
-    # TRANSACTION objects
+# TRANSACTION objects
 
-    ## The most important part.
+## The most important part.
 
-    ## This must be clean and simple and always balance.
+## This must be clean and simple and always balance.
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
@@ -91,12 +91,27 @@ class Transaction(models.Model):
 
     Sub-ledgers interact with `Accounts`/`Lines` all via this `Transaction` object.
 
+    ## Checking Zero Balancing:
+
+    Upon every `Line` save check to see if balances to zero, if not, `balances` = False.
+    This property can be handled later.
+
+    Setting as a BooleanField at save will add to DB size, but save transaction time later when
+    trying to view every `Transaction` balances without also processing every `Line`.
+
+    @@ TD is this efficient? Doesn't feel like it is, but it is simple.
+
     """
 
+    # ---
+    # Minimum required fields for object.
     date = models.DateField()
 
     reference = models.CharField(max_length=16)
 
+
+    # ---
+    # For our internal use/reference.
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, related_name="transaction")
 
     value = models.DecimalField(max_digits=19, decimal_places=2)

@@ -65,8 +65,11 @@ class Account(models.Model):
     class Meta:
         ordering = ['element', 'number', 'name']
 
+    def get_code(self):
+        return "{}-{}".format(self.element, self.number)
+
     def __str__(self):
-        return self.name
+        return "{}: {}".format(self.get_element_display(), self.name)
 
     @property
     def account(self):
@@ -105,18 +108,26 @@ class Transaction(models.Model):
 
     # ---
     # Minimum required fields for object.
+
     date = models.DateField()
 
     reference = models.CharField(max_length=16)
 
+    value = models.DecimalField(max_digits=19, decimal_places=2)
+
+    # ---
+    # Additional useful optional fields.
+
+    note = models.CharField(max_length=2048, blank=True, default="")
 
     # ---
     # For our internal use/reference.
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, related_name="transaction")
 
-    value = models.DecimalField(max_digits=19, decimal_places=2)
 
-    note = models.CharField(max_length=2048)
+    # Basic check to ensure transaction is OK
+    is_balanced = models.BooleanField(default=False)
 
 
 class Line(models.Model):
@@ -131,4 +142,4 @@ class Line(models.Model):
 
     value = models.DecimalField(max_digits=19, decimal_places=2)
 
-    note = models.CharField(max_length=2048)
+    note = models.CharField(max_length=2048, blank=True, default="")

@@ -42,6 +42,12 @@ class Entity(models.Model):
 
     name = models.CharField(max_length=128, blank=True, default="")
 
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('name',)
+        verbose_name_plural = 'entities'
+
     def __str__(self):
         return "{code} -- {name}".format(
             code=self.code,

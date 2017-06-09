@@ -52,13 +52,15 @@ class Account(models.Model):
 
     element = models.CharField(max_length=2, choices=ELEMENTS)
 
-    parent = models.ForeignKey('self', null=True, blank=True, default=None, related_name="parent+")
+    parent = models.ForeignKey('self', null=True, blank=True, default=None,
+                               related_name="parent+")
 
     number = models.CharField(max_length=4, blank=True, default=None)
 
     name = models.CharField(max_length=64)
 
-    tags = models.ManyToManyField(Tag, blank=True, default=None, related_name="account")
+    tags = models.ManyToManyField(Tag, blank=True, default=None,
+                                  related_name="account")
 
     description = models.TextField(blank=True, default='')
 
@@ -69,7 +71,10 @@ class Account(models.Model):
         return "{}-{}".format(self.element, self.number)
 
     def __str__(self):
-        return "{}: {}".format(self.get_element_display(), self.name)
+        return "[{code}] {element}: {name}".format(
+            code=self.get_code(),
+            element=self.get_element_display(),
+            name=self.name)
 
     @property
     def account(self):
@@ -123,10 +128,13 @@ class Transaction(models.Model):
     # ---
     # For our internal use/reference.
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=False, related_name="transaction")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             related_name="transactions")
 
 
-    # Basic check to ensure transaction is OK
+
+    # Basic check to ensure that all the lines associated with transaction
+    # sum out to zero. This is fundamental.
     is_balanced = models.BooleanField(default=False)
 
 

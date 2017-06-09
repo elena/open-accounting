@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+""" This app is an "Address Book" of sorts.
+
+This app should contain all "relationship" records with other companies so that
+they can be referred to all in one place, regardless of how many inter-
+connections there are in the relationship.
+
+Pattern is that `Entity` is extended in each necessary app or subledger to have
+additional parameters or details attached, such as debtors/creditors requiring
+terms.
+"""
+
 from django.db import models
 
 from . import utils
@@ -17,12 +29,15 @@ from . import utils
 
 class Entity(models.Model):
     """
+    ~~~ CONCRETE CLASS ~~~
 
     Can be used for :Organisation:-like classes.
+
+    @@TODO Needs to have additional fields attached. taiga#51
     """
     code = models.CharField(max_length=6,
                             unique=True,
-                            help_text="easy lookup unique code"
+                            help_text="Unique lookup code."
     )
 
     name = models.CharField(max_length=128, blank=True, default="")

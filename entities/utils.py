@@ -2,14 +2,19 @@
 from django.core.exceptions import ObjectDoesNotExist
 
 
+def generate_code(code=None, length=6):
+    """ Concerned about duplicate checking. This is the function
+    we want to use if we want it to fail on duplication.
+    Good for "BIDVEST", not good for "Australian ... etc".
+    """
+    return code.upper()[:length]
+
+
 def generate_unique_code(queryset,
                          code=None,
                          code_field='code', # field code is kept in
                          length=6, # same as field length
                          iteration=0):
-
-    if not code and not codify_text:
-        raise NameError('Either Code or Text to Codify must be specified.')
 
     code = code.upper()[:length]
 

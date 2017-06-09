@@ -43,4 +43,14 @@ class Entity(models.Model):
     name = models.CharField(max_length=128, blank=True, default="")
 
     def __str__(self):
-        return self.code
+        return "{code} -- {name}".format(
+            code=self.code,
+            name=self.name)
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = utils.generate_unique_code(
+                queryset=Entity.objects.all(),
+                code=self.name
+            )
+        return super(Entity, self).save( *args, **kwargs)

@@ -14,7 +14,8 @@ class TransactionAdmin(admin.ModelAdmin):
     ]
 
 class AccountAdmin(admin.ModelAdmin):
-    list_display = ('get_code', 'element','name')
+    list_display = ('get_code', 'number', 'element','name')
+    list_filter = ['element']
     model = Account
 
 

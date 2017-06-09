@@ -29,6 +29,11 @@ ELEMENTS = (
     ('15', 'Expenses'),
 )
 
+SPECIAL = [
+    ('ACP', 'Accounts Payable Liability Account'),
+    ('ACR', 'Accounts Receivable Asset Account'),
+]
+
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
@@ -63,6 +68,14 @@ class Account(models.Model):
                                   related_name="account")
 
     description = models.TextField(blank=True, default='')
+
+    # Accounts which are "hard" referenced by code.
+    special_account = models.CharField(max_length=8, choices=SPECIAL, blank=True,
+                                       null=True, default=None)
+
+    # Payments can be made to/from this account.
+    # Also accounts used by "Bank Reconciliations".
+    payment = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['element', 'number', 'name']
@@ -131,7 +144,9 @@ class Transaction(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
                              related_name="transactions")
 
+    created_at = models.DateTimeField(auto_now_add=True)
 
+    updated_at = models.DateTimeField(auto_now=True)
 
     # Basic check to ensure that all the lines associated with transaction
     # sum out to zero. This is fundamental.

@@ -65,7 +65,7 @@ class Account(models.Model):
     name = models.CharField(max_length=64)
 
     tags = models.ManyToManyField(Tag, blank=True, default=None,
-                                  related_name="account")
+                                  related_name="accounts")
 
     description = models.TextField(blank=True, default='')
 
@@ -159,9 +159,9 @@ class Line(models.Model):
 
     Correct DR/CR value to be calculated in relevant view or subledger.
     """
-    transaction = models.ForeignKey(Transaction, null=False, related_name="line")
+    transaction = models.ForeignKey(Transaction, null=False, related_name="lines")
 
-    account = models.ForeignKey(Account, null=False, related_name="line")
+    account = models.ForeignKey(Account, null=False, related_name="lines")
 
     value = models.DecimalField(max_digits=19, decimal_places=2)
 

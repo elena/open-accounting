@@ -73,10 +73,6 @@ class Account(models.Model):
     special_account = models.CharField(max_length=8, choices=SPECIAL, blank=True,
                                        null=True, default=None)
 
-    # Payments can be made to/from this account.
-    # Also accounts used by "Bank Reconciliations".
-    payment = models.BooleanField(default=False)
-
     class Meta:
         ordering = ['element', 'number', 'name']
 

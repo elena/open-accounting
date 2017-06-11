@@ -25,7 +25,6 @@ class Migration(migrations.Migration):
                 ('name', models.CharField(max_length=64)),
                 ('description', models.TextField(blank=True, default='')),
                 ('special_account', models.CharField(blank=True, choices=[('ACP', 'Accounts Payable Liability Account'), ('ACR', 'Accounts Receivable Asset Account')], default=None, max_length=8, null=True)),
-                ('payment', models.BooleanField(default=False)),
                 ('parent', models.ForeignKey(blank=True, default=None, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='parent+', to='ledgers.Account')),
             ],
             options={

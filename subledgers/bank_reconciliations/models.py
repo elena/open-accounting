@@ -53,7 +53,7 @@ class BankTransaction(models.Model):
                                   related_name="banktransactions")
 
     def __str__(self):
-        return self.description
+        return "{:%d-%b-%Y} -- ${} -- {}".format(self.date, self.value, self.description)
 
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #

@@ -14,10 +14,19 @@ from django.db import models
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
 
+BANKS = [
+    ('CBA', 'CBA'),
+    ('NAB', 'NAB'),
+]
+
+
 class BankAccount(models.Model):
 
     account = models.OneToOneField('ledgers.Account', null=False, related_name="bankaccounts")
 
+    bank = models.CharField(max_length=8, choices=BANKS, blank=True,
+                            null=True, default=None,
+                            help_text="Used for statement importing formats.")
     name = models.CharField(max_length=6, blank=True, default="")
 
     bsb = models.CharField(max_length=64, blank=True, default="")

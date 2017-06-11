@@ -55,6 +55,7 @@ INSTALLED_APPS = [
 
     ## Ledgers/Subledgers -- tightly coupled
     'ledgers',
+    'ledgers.bank_accounts',
 ]
 
 MIDDLEWARE = [

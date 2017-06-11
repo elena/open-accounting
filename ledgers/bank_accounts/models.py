@@ -27,6 +27,7 @@ class BankAccount(models.Model):
     bank = models.CharField(max_length=8, choices=BANKS, blank=True,
                             null=True, default=None,
                             help_text="Used for statement importing formats.")
+
     name = models.CharField(max_length=6, blank=True, default="")
 
     bsb = models.CharField(max_length=64, blank=True, default="")
@@ -34,3 +35,6 @@ class BankAccount(models.Model):
     account_number = models.IntegerField(blank=True, null=True)
 
     note = models.CharField(max_length=2048, blank=True, default="")
+
+    def __str__(self):
+        return "{} {} {}".format(self.bsb, self.account_number, self.account)

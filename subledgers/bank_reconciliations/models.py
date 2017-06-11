@@ -16,8 +16,8 @@ class BankTransaction(models.Model):
     provided from statement.
     """
 
-    bank_accounts = models.ForeignKey('bank_accounts.BankAccount',
-                                      related_name='banktransactions')
+    bank_account = models.ForeignKey('bank_accounts.BankAccount',
+                                     related_name='banktransactions')
 
     transaction = models.OneToOneField(Transaction, null=True, blank=True,
                                        default=None,

@@ -25,7 +25,7 @@ class BankTransaction(models.Model):
 
     # ~~ fields from dump ~~
 
-    date = models.DateTimeField()
+    date = models.DateField()
 
     value = models.DecimalField(max_digits=19, decimal_places=2)
 
@@ -54,6 +54,7 @@ class BankTransaction(models.Model):
 
     def __str__(self):
         return "{:%d-%b-%Y} -- ${} -- {}".format(self.date, self.value, self.description)
+
 
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #

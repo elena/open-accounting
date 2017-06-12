@@ -52,6 +52,8 @@ class BankTransaction(models.Model):
     tags = models.ManyToManyField('ledgers.Tag', blank=True, default=None,
                                   related_name="banktransactions")
 
+    class Meta:
+        ordering = ['date']
     def __str__(self):
         return "{:%d-%b-%Y} -- ${} -- {}".format(self.date, self.value, self.description)
 

@@ -29,7 +29,7 @@ To do this we will:
 """
 
 
-def bank_statement_import(data, bank):
+def bank_statement_import(data):
 
     results = []
     bank = BankAccount.objects.get(pk=data['bank'])

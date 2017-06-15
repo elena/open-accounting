@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+import warnings
 from django.db import models
 from django.conf import settings
 
@@ -98,15 +100,30 @@ class Account(models.Model):
 
 # TRANSACTION objects
 
-## The most important part.
+## The most important part. Integrity of transactions/lines is paramount.
+##    Can NOT be DIRECTLY ADDED/MODIFIED.
+##    Can NOT be DELETED at all.
 
-## This must be clean and simple and always balance.
+## Accounting systems are one of the rare systems that only ever move forward.
+## Deactivation doesn't make sense and once in the ledger a transaction is
+## never ever deleted. It can be adjusted or reversed by another transaction,
+## but once it exists, it exists forever.
+
+## Transactions/Lines are not directly modifiable, they can only be CRUD by
+## subledgers.
+
+## These must be clean and simple and always balance.
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
 
 class Transaction(models.Model):
     """ The master object. The most basic form of Ledger Entry, with minimal requirements.
+    """ Integrity of transactions/lines is paramount.
+    Can NOT be DIRECTLY ADDED/MODIFIED.
+    Can NOT be DELETED at all.
+
+    The master object. The most basic form of Ledger Entry, with minimal requirements.
 
     Transactions are sacred and must always balance to zero.
 

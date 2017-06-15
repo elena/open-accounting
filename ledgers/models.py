@@ -189,13 +189,18 @@ class Line(models.Model):
             Note: only multi-line transactions/lines can allow Line notes.
             Necessary compromise for simplicity 3-obj adding allows.
             """
-            dr_account = Account.get_account(data[0])
-            cr_account = Account.get_account(data[1])
-            value = Decimal(data[2])
-            if dr_account and cr_account and value:
-                return (value,
-                        {'account': dr_account, 'value': value},
-                        {'account': cr_account, 'value': -value})
+            ERR_MSG = "Input tuple should be: (dr_account, cr_account, value)"
+            try:
+                dr_account = Account.get_account(data[0])
+                cr_account = Account.get_account(data[1])
+                value = decimal.Decimal(data[2])
+                if dr_account and cr_account and value \
+                   and not dr_account==cr_account:
+                    return (value,
+                            {'account': dr_account, 'value': value},
+                            {'account': cr_account, 'value': -value})
+            except (decimal.InvalidOperation, AttributeError):
+                raise Exception(ERR_MSG)
         else:
             return None
     """

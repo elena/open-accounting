@@ -146,14 +146,16 @@ class Transaction(models.Model):
 
     date = models.DateField()
 
-    reference = models.CharField(max_length=16)
-
     value = models.DecimalField(max_digits=19, decimal_places=2)
 
     # ---
     # Additional useful optional fields.
 
     note = models.CharField(max_length=2048, blank=True, default="")
+
+
+    # @@TODO could be generic relation
+    source = models.CharField(max_length=1024, blank=True, default="")
 
     # ---
     # For our internal use/reference.

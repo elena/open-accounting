@@ -173,6 +173,31 @@ class Transaction(models.Model):
 
 
 class Line(models.Model):
+
+
+    ## Custom methods
+
+    def line_validation(data):
+        """ Returns a tuple as follows:
+        (value, {**kwarg}, {**kwarg} {**kwarg})
+        `kwargs` are everything that's required to generate lines.
+        """
+
+        # case simple/single:
+        if type(data)==tuple and len(data)==3:
+            """ BEWARE!! Transactions may be posted upside-down. CHECK USAGE.
+            Note: only multi-line transactions/lines can allow Line notes.
+            Necessary compromise for simplicity 3-obj adding allows.
+            """
+            dr_account = Account.get_account(data[0])
+            cr_account = Account.get_account(data[1])
+            value = Decimal(data[2])
+            if dr_account and cr_account and value:
+                return (value,
+                        {'account': dr_account, 'value': value},
+                        {'account': cr_account, 'value': -value})
+        else:
+            return None
     """
     Value is absolute value in General Ledger.
 

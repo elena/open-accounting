@@ -37,4 +37,9 @@ class BankAccount(models.Model):
     note = models.CharField(max_length=2048, blank=True, default="")
 
     def __str__(self):
-        return "{} {} {}".format(self.bsb, self.account_number, self.account)
+        return "{} {}".format(self.bank, self.account)
+
+    def save(self, *args, **kwargs):
+        self.account.special_account = 'bank'
+        self.account.save()
+        return super(BankAccount, self).save(*args, **kwargs)

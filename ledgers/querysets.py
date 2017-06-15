@@ -10,3 +10,7 @@ class AccountQuerySet(models.query.QuerySet):
 
     def regular(self):
         return self.filter(special_account=None)
+
+    def by_code(self, code):
+        element, number = code.split("-")
+        return self.filter(element=element, number=number).first()

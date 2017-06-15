@@ -83,14 +83,15 @@ class Account(models.Model):
     class Meta:
         ordering = ['element', 'number', 'name']
 
-    def get_code(self):
-        return "{}-{}".format(self.element, self.number)
-
     def __str__(self):
         return "[{code}] {name}".format(
             code=self.get_code(),
             name=self.name)
 
+    def get_code(self):
+        """ beware: This format is parsed back by queryset.AccountQuerySet """
+        return "{element}-{number:0>4}".format(element=self.element,
+                                               number=self.number)
 
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #

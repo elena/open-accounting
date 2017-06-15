@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 
+from . import querysets
+
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
@@ -32,6 +34,9 @@ ELEMENTS = (
 SPECIAL = [
     ('ACP', 'Accounts Payable Liability Account'),
     ('ACR', 'Accounts Receivable Asset Account'),
+    ('bank', 'Bank Account'),
+    ('owner', 'Owner Equity'),
+    ('suspense', 'Holding/Suspense'),
 ]
 
 
@@ -73,6 +78,8 @@ class Account(models.Model):
     special_account = models.CharField(max_length=8, choices=SPECIAL, blank=True,
                                        null=True, default=None)
 
+    objects = querysets.AccountQuerySet.as_manager()
+
     class Meta:
         ordering = ['element', 'number', 'name']
 
@@ -80,14 +87,10 @@ class Account(models.Model):
         return "{}-{}".format(self.element, self.number)
 
     def __str__(self):
-        return "[{code}] {element}: {name}".format(
+        return "[{code}] {name}".format(
             code=self.get_code(),
-            element=self.get_element_display(),
             name=self.name)
 
-    @property
-    def account(self):
-        return "{element}-{number:04}".format(self.element, self.number)
 
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #

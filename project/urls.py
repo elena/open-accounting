@@ -18,6 +18,12 @@ from django.conf.urls import include, url
 from django.contrib import admin
 
 urlpatterns = [
+
+    # internal app urls
+
+    url(r'^bank/reconciliations/',
+        include('subledgers.bank_reconciliations.urls')),
+
     url(r'^admin/', admin.site.urls),
 ]
 

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+
+{% block title %}{{ homepage.title }} - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="/">Home</a></li>
+  <li class="breadcrumb-item active">Bank Reconciliations</li>
+</ol>
+{% endblock %}
+
+
+
+{% block content %}
+
+<div class="card-block">
+
+  {% for obj in object_list %}
+  <div>
+    <a href="{% url 'bank-reconciliations:bank-reconciliation' obj.account.get_code %}">
+      {{ obj }}
+    </a>
+  </div>
+  {% endfor %}
+
+</div>
+
+{% endblock %}

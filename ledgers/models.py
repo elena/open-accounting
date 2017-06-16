@@ -183,17 +183,59 @@ class Transaction(models.Model):
     # sum out to zero. This is fundamental.
     is_balanced = models.BooleanField(default=False)
 
+    def __str__(self):
+        return "[{}] ${:.2f} {}".format(self.pk, self.value, self.source)
 
+    ## Overwrite built-in Model methods
 
+    def save(self, lines=None, *args, **kwargs):
+
+        if not self.pk and lines==None:
+            """ New object check: Basic 'is adequate' to create check. """
+            raise Exception("Lines are necessary to save new Transaction")
+
+        if not self.pk:
+            """ New objects: 'lines' input only works for NEW Transactions
+            @@TODO: use `lines` for updates?
+            """
+            # this is just passively preparing value and line kwargs
+            self.value, valid_lines = Transaction.line_validation(lines)
+
+            # if passed line_validation then it is balanced
+            self.is_balanced = True
+
+            # must save `Transaction` before able to save lines
+            # this should validate self before lines are added
+            # the timing of this matters
+            super(Transaction, self).save(*args, **kwargs)
+
+            # create the lines
+            for line_kwargs in valid_lines:
+                new_line = Line(transaction=self, **line_kwargs)
+                new_line.save()
+        else:
+            """ Existing objects: check and save """
+            # Always check balances.
+            if not self.is_balanced==self.check_is_balanced():
+                self.is_balanced=self.check_is_balanced()
+            super(Transaction, self).save(*args, **kwargs)
 
     ## Custom methods
 
-    def line_validation(data):
-        """ Returns a tuple as follows:
-        (value, {**kwarg}, {**kwarg} {**kwarg})
-        `kwargs` are everything that's required to generate lines.
+    def check_is_balanced(self):
+        """ Challenge with this method is knowing when all the lines have been
+        updated.
         """
+        if self.lines.count() >=2 \
+           and self.lines.aggregate(Sum('value'))['value__sum']==decimal.Decimal(0):
+            return True
+        return False
+        #raise Exception('Transaction does not balance.')
 
+    def line_validation(data):
+        """ Returns a tuple as follows: (value, {**kwarg}, {**kwarg} {**kwarg})
+        where `kwargs` are everything that's required to generate lines.
+        """
         ERR_MSG = """
 Input was:
 {}
@@ -249,6 +291,7 @@ Input should be:
         raise Exception(ERR_MSG)
 
 
+
 class Line(models.Model):
     """
     Value is absolute value in General Ledger.
@@ -262,3 +305,8 @@ class Line(models.Model):
     value = models.DecimalField(max_digits=19, decimal_places=2)
 
     note = models.CharField(max_length=2048, blank=True, default="")
+
+    def save(self, *args, **kwargs):
+        obj = super(Line, self).save(*args, **kwargs)
+        # re-save for `Transaction.is_balanced`
+        self.transaction.save()

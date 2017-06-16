@@ -241,8 +241,8 @@ Input should be:
                 if dr_account and cr_account and value \
                    and not dr_account==cr_account:
                     return (value,
-                            {'account': dr_account, 'value': value},
-                            {'account': cr_account, 'value': -value})
+                            [{'account': dr_account, 'value': value},
+                             {'account': cr_account, 'value': -value}])
             except (decimal.InvalidOperation, AttributeError):
                 raise Exception(ERR_MSG)
 

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import warnings
+import decimal
 from django.db import models
 from django.conf import settings
 
@@ -95,6 +96,17 @@ class Account(models.Model):
         return "{element}-{number:0>4}".format(element=self.element,
                                                number=self.number)
 
+    def get_account(data):
+        """ Allow fetch `Account` by either string of "code" or Account obj
+        """
+        if type(data)==Account:
+            return data
+        account = Account.objects.by_code(data)
+        if account:
+            return account
+        print(account)
+        raise Exception("Account can't be found based upon that input.")
+        # @@TODO Could potentially raise a TypeError here
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
@@ -172,7 +184,6 @@ class Transaction(models.Model):
     is_balanced = models.BooleanField(default=False)
 
 
-class Line(models.Model):
 
 
     ## Custom methods
@@ -183,13 +194,46 @@ class Line(models.Model):
         `kwargs` are everything that's required to generate lines.
         """
 
+        ERR_MSG = """
+Input was:
+{}
+
+Input should be:
+(dr_account, cr_account, value) # must be immutable tuple
+    or
+[(dr_account, 1),
+ (dr_account, 1, "Optional Note"),
+ (cr_account, -2),
+ ...
+]""".format(data)
+
+        # case multiple:
+        # basically matter of converting list/tuple to list kwargs
+        if (type(data)==list or type(data)==tuple) and len(data)>=2 \
+           and type(data[0])==tuple:
+            bal, lines = 0, [0, []]
+            for line in data:
+                kwargs = {}
+                if len(line)>=2:
+                    kwargs['account'] = Account.get_account(line[0])
+                    kwargs['value'] = value = decimal.Decimal(line[1])
+                    if len(line)>2:
+                        kwargs['note'] = line[2]
+                    bal += value
+                if value > 0:
+                    lines[0] += value
+                lines[1].append(kwargs)
+            if bal:
+                raise Exception("Lines do not balance. Total is {}".format(bal))
+            else:
+                return lines
+
         # case simple/single:
         if type(data)==tuple and len(data)==3:
             """ BEWARE!! Transactions may be posted upside-down. CHECK USAGE.
             Note: only multi-line transactions/lines can allow Line notes.
             Necessary compromise for simplicity 3-obj adding allows.
             """
-            ERR_MSG = "Input tuple should be: (dr_account, cr_account, value)"
             try:
                 dr_account = Account.get_account(data[0])
                 cr_account = Account.get_account(data[1])
@@ -201,8 +245,11 @@ class Line(models.Model):
                             {'account': cr_account, 'value': -value})
             except (decimal.InvalidOperation, AttributeError):
                 raise Exception(ERR_MSG)
-        else:
-            return None
+
+        raise Exception(ERR_MSG)
+
+
+class Line(models.Model):
     """
     Value is absolute value in General Ledger.
 

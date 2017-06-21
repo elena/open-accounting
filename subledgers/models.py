@@ -16,7 +16,7 @@ from ledgers.models import Transaction
 
 class Entry(models.Model):
 
-    ## *** ABSTRACT CLASS ***
+    # *** ABSTRACT CLASS ***
 
     """ Generalised in case more fields are necessary for subjedgers.
 
@@ -31,7 +31,7 @@ class Entry(models.Model):
 
 class Invoice(Entry):
 
-    ## *** ABSTRACT CLASS ***
+    # *** ABSTRACT CLASS ***
 
     """ For use with at least: Creditors Invoices, Debtors Invoices
 
@@ -39,12 +39,13 @@ class Invoice(Entry):
     seller abn, what, tax (and what applied to), total value, (due date)
 
     Transaction contains:
-    - Date
-    - Reference
-    - Value
-    - Note
-    - User
-
+    from *abstract* `Entry`
+      transaction = models.OneToOneField(Transaction)
+      - *Date
+      - *Value
+      - Note
+      - *User
+      - source
     """
 
     due_date = models.DateField(null=True)
@@ -55,8 +56,8 @@ class Invoice(Entry):
 
     reference = models.CharField(max_length=128, blank=True, default="")
 
-    gst_total = models.DecimalField(max_digits=19, decimal_places=2, default=Decimal('0.00'))
-
+    gst_total = models.DecimalField(
+        max_digits=19, decimal_places=2, default=Decimal('0.00'))
 
     class Meta:
         abstract = True
@@ -64,7 +65,7 @@ class Invoice(Entry):
 
 class Payment(models.Model):
 
-    ## *** ABSTRACT CLASS ***
+    # *** ABSTRACT CLASS ***
 
     """ Payment is transaction with 2 lines:
     DR/CR bank account

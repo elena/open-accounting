@@ -1,20 +1,55 @@
 # -*- coding: utf-8 -*-
-import warnings
 import unittest
 from datetime import date
 from decimal import Decimal
 from django.contrib.auth.models import User
-from django.test import TestCase, Client
+from django.test import TestCase  # , Client
 
-from .models import Account, Transaction, Line
+from ledgers.models import Account, Transaction
+from ledgers import utils
+
+
+class TestUtilsGetSource(TestCase, unittest.TestCase):
+
+    def test_get_source_passes(self):
+        test_input = Account
+        test_result = "ledgers.Account"
+        self.assertEqual(utils.get_source(test_input), test_result)
+
+    def test_get_source_failure(self):
+        test_input = "Account"
+        self.assertRaises(Exception, utils.get_source, test_input)
+
+
+class TestUtilsMakeDecimal(TestCase, unittest.TestCase):
+
+    def test_make_decimal_str_num_passes(self):
+        test_input = "5"
+        test_result = Decimal('5.00')
+        self.assertEqual(utils.make_decimal(test_input), test_result)
+
+    def test_make_decimal_int_passes(self):
+        test_input = int(5)
+        test_result = Decimal('5.00')
+        self.assertEqual(utils.make_decimal(test_input), test_result)
+
+    def test_make_decimal_Decimal_passes(self):
+        test_input = Decimal(5)
+        test_result = Decimal('5.00')
+        self.assertEqual(utils.make_decimal(test_input), test_result)
+
+    def test_make_decimal_str_alpha_failure(self):
+        test_input = "asdf"
+        self.assertRaises(Exception, utils.make_decimal, test_input)
 
 
 class TestTransactionSave(TestCase):
 
     def setUp(self):
-        self.date = date(2017,6,16)
-        self.user = User.objects.create_user('test_staff_user', 'test@example.com', '1234')
-        self.user.is_staff=True
+        self.date = date(2017, 6, 16)
+        self.user = User.objects.create_user(
+            'test_staff_user', 'test@example.com', '1234')
+        self.user.is_staff = True
         self.user.save()
         self.a1 = Account(element='01', number='0101', name='Test Account 1')
         self.a1.save()
@@ -73,7 +108,7 @@ class TestTransactionSave(TestCase):
         self.assertEqual(new_obj.lines.last().value, -5)
         self.assertEqual(new_obj.lines.last().note, "")
 
-    def test_transaction_new_object_multi2_all_fields_correct(self):
+    def test_transaction_new_object_multi3_all_fields_correct(self):
         """ Testing custom save() behaves as expected."""
 
         test_input = [
@@ -103,8 +138,9 @@ class TestTransactionCheckIsBalanced(TestCase):
     """ Test a bunch of random object types and formats for outcomes. """
 
     def setUp(self):
-        self.user = User.objects.create_user('test_staff_user', 'test@example.com', '1234')
-        self.user.is_staff=True
+        self.user = User.objects.create_user(
+            'test_staff_user', 'test@example.com', '1234')
+        self.user.is_staff = True
         self.user.save()
         self.a1 = Account(element='01', number='0101', name='Test Account 1')
         self.a1.save()
@@ -113,7 +149,7 @@ class TestTransactionCheckIsBalanced(TestCase):
 
         t1_value = Decimal(10)
         lines = (self.a1, self.a2, t1_value)
-        self.t1 = Transaction(date=date(2017,6,16), value=0, user=self.user)
+        self.t1 = Transaction(date=date(2017, 6, 16), value=0, user=self.user)
         self.t1.save(lines=lines)
 
     def test_transaction_check_is_balanced_fails(self):
@@ -162,7 +198,7 @@ class TestTransactionLineValidationMultilineFailures(TestCase):
             ("01-0102", 5)
         ]
         self.assertRaises(Exception, Transaction.line_validation, test_input)
-        #self.assertEqual(Transaction.line_validation(test_input), None)
+        # self.assertEqual(Transaction.line_validation(test_input), None)
 
     def test_transaction_line_validation_multi_no_bal3_fails(self):
         test_input = [
@@ -171,7 +207,7 @@ class TestTransactionLineValidationMultilineFailures(TestCase):
             ("01-0102", -5)
         ]
         self.assertRaises(Exception, Transaction.line_validation, test_input)
-        #self.assertEqual(Transaction.line_validation(test_input), None)
+        # self.assertEqual(Transaction.line_validation(test_input), None)
 
     def test_transaction_line_validation_multi_account_fails(self):
         test_input = [
@@ -179,7 +215,7 @@ class TestTransactionLineValidationMultilineFailures(TestCase):
             ("01-0102", 5)
         ]
         self.assertRaises(Exception, Transaction.line_validation, test_input)
-        #self.assertEqual(Transaction.line_validation(test_input), None)
+        # self.assertEqual(Transaction.line_validation(test_input), None)
 
 
 class TestTransactionLineValidationMultilinePasses(TestCase):
@@ -202,7 +238,7 @@ class TestTransactionLineValidationMultilinePasses(TestCase):
         test_result = [Decimal(5),
                        [{'account': self.a1, 'value': Decimal(5)},
                         {'account': self.a2, 'value': Decimal(-5)}
-                       ]]
+                        ]]
         self.assertEqual(Transaction.line_validation(test_input),
                          test_result)
 
@@ -214,7 +250,7 @@ class TestTransactionLineValidationMultilinePasses(TestCase):
         test_result = [Decimal(5),
                        [{'account': self.a1, 'value': Decimal(5), 'note': 'A notation'},
                         {'account': self.a2, 'value': Decimal(-5)}
-                       ]]
+                        ]]
         self.assertEqual(Transaction.line_validation(test_input),
                          test_result)
 
@@ -225,8 +261,9 @@ class TestTransactionLineValidationMultilinePasses(TestCase):
         ]
         test_result = [Decimal(5),
                        [{'account': self.a1, 'value': Decimal(5)},
-                        {'account': self.a2, 'value': Decimal(-5), 'note': 'A notation'},
-                       ]]
+                        {'account': self.a2,
+                         'value': Decimal(-5), 'note': 'A notation'},
+                        ]]
         self.assertEqual(Transaction.line_validation(test_input),
                          test_result)
 
@@ -237,8 +274,9 @@ class TestTransactionLineValidationMultilinePasses(TestCase):
         ]
         test_result = [Decimal(5),
                        [{'account': self.a1, 'value': Decimal(5), 'note': 'A notation'},
-                        {'account': self.a2, 'value': Decimal(-5), 'note': 'Another notation'},
-                       ]]
+                        {'account': self.a2,
+                         'value': Decimal(-5), 'note': 'Another notation'},
+                        ]]
         self.assertEqual(Transaction.line_validation(test_input),
                          test_result)
 
@@ -253,7 +291,7 @@ class TestTransactionLineValidationMultilinePasses(TestCase):
                        [{'account': self.a1, 'value': Decimal(-5)},
                         {'account': self.a1, 'value': Decimal(-5)},
                         {'account': self.a1, 'value': Decimal(10)}
-                       ]]
+                        ]]
         self.assertEqual(Transaction.line_validation(test_input),
                          test_result)
 
@@ -267,7 +305,7 @@ class TestTransactionLineValidationMultilinePasses(TestCase):
                        [{'account': self.a1, 'value': Decimal(5)},
                         {'account': self.a2, 'value': Decimal(5)},
                         {'account': self.a3, 'value': Decimal(-10)},
-                       ]]
+                        ]]
         self.assertEqual(Transaction.line_validation(test_input),
                          test_result)
 
@@ -281,7 +319,7 @@ class TestTransactionLineValidationMultilinePasses(TestCase):
                        [{'account': self.a1, 'value': Decimal(5)},
                         {'account': self.a2, 'value': Decimal(5)},
                         {'account': self.a3, 'value': Decimal(-10)},
-                       ]]
+                        ]]
         self.assertEqual(Transaction.line_validation(test_input),
                          test_result)
 
@@ -301,7 +339,7 @@ class TestTransactionLineValidationMultilinePasses(TestCase):
                         {'account': self.a1, 'value': Decimal(-5)},
                         {'account': self.a2, 'value': Decimal(-5)},
                         {'account': self.a3, 'value': Decimal(10)},
-                       ]]
+                        ]]
         self.assertEqual(Transaction.line_validation(test_input),
                          test_result)
 

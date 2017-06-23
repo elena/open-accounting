@@ -16,6 +16,8 @@ Including another URLconf
 
 from django.conf.urls import include, url
 from django.contrib import admin
+
+from . import routers, views
 from subledgers.views import upload_view
 
 
@@ -30,6 +32,11 @@ urlpatterns = [
 
     url(r'^bank/reconciliations/',
         include('subledgers.bank_reconciliations.urls')),
+
+
+    # external urls
+
+    url(r'^api/', include(routers, namespace='api')),
 
     url(r'^admin/', admin.site.urls),
 ]

@@ -18,8 +18,8 @@ class BankTransaction(models.Model):
     bank_account = models.ForeignKey('bank_accounts.BankAccount',
                                      related_name='banktransactions')
 
-    transaction = models.OneToOneField(Transaction, null=True, blank=True,
-                                       default=None,
+    transaction = models.OneToOneField('ledgers.Transaction', null=True,
+                                       blank=True, default=None,
                                        related_name='banktransactions')
 
     # ~~ fields from dump ~~
@@ -45,6 +45,7 @@ class BankTransaction(models.Model):
     balance = models.DecimalField(max_digits=19, decimal_places=2,
                                   null=True, blank=True, default=None)
 
+    not_now = models.BooleanField(default=False)
     # ~~ working fields ~~
 
     note = models.CharField(max_length=64, blank=True, default=None, null=True)

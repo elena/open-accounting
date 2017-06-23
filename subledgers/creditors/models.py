@@ -3,6 +3,7 @@ from django.db import models
 
 from .. import settings
 from ..models import Invoice, Payment
+from subledgers.models import Invoice, Payment
 
 
 class Creditor(models.Model):
@@ -20,10 +21,10 @@ class CreditorInvoice(Invoice):
     """ `Invoice` is `Entry` that has more details.
     """
 
-    creditor = models.ForeignKey('creditors.Creditor')
+    relation = models.ForeignKey('creditors.Creditor')
 
     def __str__(self):
-        return "[{}] {} -- {} -- ${}".format(self.creditor.entity.code,
+        return "[{}] {} -- {} -- ${}".format(self.relation.entity.code,
                                              self.transaction.date,
                                              self.invoice_number,
                                              self.transaction.value)
@@ -51,7 +52,7 @@ class CreditorPayment(Payment):
     # Intentional not compulsory.
     # Payments can be reconciled to here (objects created).
     # It is ALWAYS the case that some payments will not line up to
-    creditor = models.ForeignKey('creditors.Creditor', null=True, blank=True)
+    relation = models.ForeignKey('creditors.Creditor', null=True, blank=True)
 
     value = models.DecimalField(max_digits=19, decimal_places=2,
                                 null=True, blank=True, default=None)

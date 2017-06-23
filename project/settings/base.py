@@ -54,9 +54,11 @@ INSTALLED_APPS = [
 
     'rest_framework',
 
-    ## Ledgers/Subledgers -- tightly coupled
+    # Ledgers/Subledgers -- tightly coupled
     'ledgers',
     'ledgers.bank_accounts',
+    'subledgers',
+    'subledgers.creditors',
     'subledgers.bank_reconciliations',
 
     # Other local apps

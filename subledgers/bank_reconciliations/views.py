@@ -4,6 +4,14 @@ from django.views import generic
 
 from .forms import StatementUploadForm
 from .utils import bank_statement_import
+from rest_framework import viewsets
+
+from .models import BankTransaction
+from .serializers import BankTransactionSerializer
+
+class BankTransactionViewSet(viewsets.ModelViewSet):
+    queryset = BankTransaction.objects.all()
+    serializer_class = BankTransactionSerializer
 
 
 def add_statements(request):

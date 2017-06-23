@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 
+from . import querysets
 
 
 class BankTransaction(models.Model):
@@ -50,6 +51,8 @@ class BankTransaction(models.Model):
 
     tags = models.ManyToManyField('ledgers.Tag', blank=True, default=None,
                                   related_name="banktransactions")
+
+    objects = querysets.QuerySet.as_manager()
 
     class Meta:
         ordering = ['date']

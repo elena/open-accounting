@@ -16,8 +16,12 @@ Including another URLconf
 
 from django.conf.urls import include, url
 from django.contrib import admin
+from subledgers.views import upload_view
+
 
 urlpatterns = [
+
+    url(r'upload/', upload_view),
 
     # internal app urls
 

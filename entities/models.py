@@ -38,7 +38,7 @@ class Entity(models.Model):
     code = models.CharField(max_length=6,
                             unique=True,
                             help_text="Unique lookup code."
-    )
+                            )
 
     name = models.CharField(max_length=128, blank=True, default="")
 
@@ -49,7 +49,7 @@ class Entity(models.Model):
         verbose_name_plural = 'entities'
 
     def __str__(self):
-        return "{code} -- {name}".format(
+        return "[{code}] {name}".format(
             code=self.code,
             name=self.name)
 

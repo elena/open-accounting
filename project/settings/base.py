@@ -58,6 +58,9 @@ INSTALLED_APPS = [
     'ledgers',
     'ledgers.bank_accounts',
     'subledgers.bank_reconciliations',
+
+    # Other local apps
+    'entities',
 ]
 
 MIDDLEWARE = [

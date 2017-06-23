@@ -18,6 +18,14 @@ urls = [
         name='bank-statement-upload'
         ),
 
+    url(r'^api/(?P<pk>[0-9]+)/$',
+        views.BankTransactionViewSet.as_view({
+            'get': 'retrieve',
+            'put': 'update',
+            'post': 'update',
+            'patch': 'partial_update'})
+        ),
+
     # Reconcile listview
     url(r'^(?P<account>[0-9\-]+)/$',
         views.bank_reconciliation,

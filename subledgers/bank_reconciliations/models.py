@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 
-from .. import settings
-from ..models import Entry, Transaction
 
 
 class BankTransaction(models.Model):
@@ -12,8 +10,8 @@ class BankTransaction(models.Model):
 
     List of transaction which come from the bank statements.
 
-    Dumped in here and then allocated. Transaction can be created using the details
-    provided from statement.
+    Dumped in here and then allocated.
+    Transaction can be created using the details  provided from statement.
     """
 
     bank_account = models.ForeignKey('bank_accounts.BankAccount',
@@ -25,6 +23,7 @@ class BankTransaction(models.Model):
 
     # ~~ fields from dump ~~
 
+    # Straight from import uniquely stored here, not duplicate of `Transaction`
     date = models.DateField()
 
     value = models.DecimalField(max_digits=19, decimal_places=2)
@@ -39,7 +38,7 @@ class BankTransaction(models.Model):
     # Additional bank-supplied information not important to this system.
     # Eg "CREDIT CARD PURCHASE", "AUS Card xx7495"
     additional = models.CharField(max_length=512, null=True, blank=True,
-                                     default=None)
+                                  default=None)
 
     # No real reason to gather this except for the reason that it can be.
     balance = models.DecimalField(max_digits=19, decimal_places=2,
@@ -54,8 +53,10 @@ class BankTransaction(models.Model):
 
     class Meta:
         ordering = ['date']
+
     def __str__(self):
-        return "{:%d-%b-%Y} -- ${} -- {}".format(self.date, self.value, self.description)
+        return "{:%d-%b-%Y} -- ${} -- {}".format(self.date, self.value,
+                                                 self.description)
 
 
 

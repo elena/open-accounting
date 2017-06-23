@@ -137,27 +137,29 @@ class Account(models.Model):
 
 
 class Transaction(models.Model):
-    """ The master object. The most basic form of Ledger Entry, with minimal requirements.
-    """ Integrity of transactions/lines is paramount.
+    """ The master object. The most basic form of Ledger Entry, with minimal
+    requirements.
+
+    Integrity of transactions/lines is paramount.
     Can NOT be DIRECTLY ADDED/MODIFIED.
     Can NOT be DELETED at all.
 
-    The master object. The most basic form of Ledger Entry, with minimal requirements.
+    The master object. The most basic form of Ledger Entry, with minimal
+    requirements.
 
     Transactions are sacred and must always balance to zero.
 
-    Sub-ledgers interact with `Accounts`/`Lines` all via this `Transaction` object.
+    Sub-ledgers interact with `Accounts`/`Lines` all via this `Transaction`
+    object.
 
     # Checking Zero Balancing:
 
-    Upon every `Line` save check to see if balances to zero, if not, `balances` = False.
-    This property can be handled later.
+    Upon every `Line` save check to see if balances to zero, if not,
+    `balances` = False. This property can be handled later.
 
-    Setting as a BooleanField at save will add to DB size, but save transaction time later when
-    trying to view every `Transaction` balances without also processing every `Line`.
-
-    @@ TD is this efficient? Doesn't feel like it is, but it is simple.
-
+    Setting as a BooleanField at save will add to DB size, but save transaction
+    time later when  trying to view every `Transaction` balances without also
+    processing every `Line`.
     """
 
     # ---

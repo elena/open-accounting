@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
-import warnings
+import re
 import decimal
+import warnings
 from django.db import models
+from django.db.models import Sum
 from django.conf import settings
 
 from . import querysets
@@ -47,11 +49,11 @@ SPECIAL = [
 
 # CHART of ACCOUNTS (CofA)
 
-## Classifying and organising.
+# Classifying and organising.
 
-## Set up once, refined and then rarely modifed afterwards.
+# Set up once, refined and then rarely modifed afterwards.
 
-## Referred to for the purpose of reporting and categorising Transaction Items
+# Referred to for the purpose of reporting and categorising Transaction Items
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
@@ -72,7 +74,7 @@ class Account(models.Model):
 
     name = models.CharField(max_length=64)
 
-    tags = models.ManyToManyField(Tag, blank=True, default=None,
+    tags = models.ManyToManyField('ledgers.Tag', blank=True, default=None,
                                   related_name="accounts")
 
     description = models.TextField(blank=True, default='')
@@ -97,34 +99,39 @@ class Account(models.Model):
                                                number=self.number)
 
     def get_account(data):
-        """ Allow fetch `Account` by either string of "code" or Account obj
-        """
-        if type(data)==Account:
+        """ Allow fetch `Account` by either string of "code" or Account obj"""
+
+        # is `Account` object
+        if type(data) == Account:
             return data
+
+        # is string, search for `Account` object
+        data = re.sub(r'[^\d\-.]', '', data)
         account = Account.objects.by_code(data)
         if account:
             return account
-        print(account)
-        raise Exception("Account can't be found based upon that input.")
+        raise Exception(
+            "Account can't be found based upon that input: {}.".format(data))
         # @@TODO Could potentially raise a TypeError here
+
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
 # TRANSACTION objects
 
-## The most important part. Integrity of transactions/lines is paramount.
-##    Can NOT be DIRECTLY ADDED/MODIFIED.
-##    Can NOT be DELETED at all.
+# The most important part. Integrity of transactions/lines is paramount.
+# Can NOT be DIRECTLY ADDED/MODIFIED.
+# Can NOT be DELETED at all.
 
-## Accounting systems are one of the rare systems that only ever move forward.
-## Deactivation doesn't make sense and once in the ledger a transaction is
-## never ever deleted. It can be adjusted or reversed by another transaction,
-## but once it exists, it exists forever.
+# Accounting systems are one of the rare systems that only ever move forward.
+# Deactivation doesn't make sense and once in the ledger a transaction is
+# never ever deleted. It can be adjusted or reversed by another transaction,
+# but once it exists, it exists forever.
 
-## Transactions/Lines are not directly modifiable, they can only be CRUD by
-## subledgers.
+# Transactions/Lines are not directly modifiable, they can only be CRUD by
+# subledgers.
 
-## These must be clean and simple and always balance.
+# These must be clean and simple and always balance.
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
@@ -141,7 +148,7 @@ class Transaction(models.Model):
 
     Sub-ledgers interact with `Accounts`/`Lines` all via this `Transaction` object.
 
-    ## Checking Zero Balancing:
+    # Checking Zero Balancing:
 
     Upon every `Line` save check to see if balances to zero, if not, `balances` = False.
     This property can be handled later.
@@ -163,8 +170,9 @@ class Transaction(models.Model):
     # ---
     # Additional useful optional fields.
 
-    note = models.CharField(max_length=2048, blank=True, default="")
+    note = models.CharField(max_length=2048, blank=True, default="", null=True)
 
+    # reference = models.CharField(max_length=16)
 
     # @@TODO could be generic relation
     source = models.CharField(max_length=1024, blank=True, default="")
@@ -186,13 +194,22 @@ class Transaction(models.Model):
     def __str__(self):
         return "[{}] ${:.2f} {}".format(self.pk, self.value, self.source)
 
-    ## Overwrite built-in Model methods
+    # Overwrite built-in Model methods
 
     def save(self, lines=None, *args, **kwargs):
 
-        if not self.pk and lines==None:
+        if not self.pk and lines is None:
             """ New object check: Basic 'is adequate' to create check. """
-            raise Exception("Lines are necessary to save new Transaction")
+            raise Exception("""Lines are necessary to save new Transaction. Input should be:
+
+lines = (DR_account, CR_account, value)) # must be DR first immutable tuple
+    or
+lines = [(account, 1),
+         (account, 1, "Optional Note"),
+         (account, -2)] # must balance
+
+new_transaction.save(lines)
+""")
 
         if not self.pk:
             """ New objects: 'lines' input only works for NEW Transactions
@@ -216,21 +233,21 @@ class Transaction(models.Model):
         else:
             """ Existing objects: check and save """
             # Always check balances.
-            if not self.is_balanced==self.check_is_balanced():
-                self.is_balanced=self.check_is_balanced()
+            if not self.is_balanced == self.check_is_balanced():
+                self.is_balanced = self.check_is_balanced()
             super(Transaction, self).save(*args, **kwargs)
 
-    ## Custom methods
+    # Custom methods
 
     def check_is_balanced(self):
         """ Challenge with this method is knowing when all the lines have been
         updated.
         """
-        if self.lines.count() >=2 \
-           and self.lines.aggregate(Sum('value'))['value__sum']==decimal.Decimal(0):
+        if self.lines.count() >= 2 \
+           and self.lines.aggregate(Sum('value'))['value__sum'] == decimal.Decimal(0):
             return True
         return False
-        #raise Exception('Transaction does not balance.')
+        # raise Exception('Transaction does not balance.')
 
     def line_validation(data):
         """ Returns a tuple as follows: (value, {**kwarg}, {**kwarg} {**kwarg})
@@ -241,37 +258,38 @@ Input was:
 {}
 
 Input should be:
-(dr_account, cr_account, value) # must be immutable tuple
+(DR_account, CR_account, value) # must be DR first immutable tuple
     or
-[(dr_account, 1),
- (dr_account, 1, "Optional Note"),
- (cr_account, -2),
+[(account, 1),
+ (account, 1, "Optional Note"),
+ (account, -2),
  ...
 ]""".format(data)
 
         # case multiple:
         # basically matter of converting list/tuple to list kwargs
-        if (type(data)==list or type(data)==tuple) and len(data)>=2 \
-           and type(data[0])==tuple:
+        if (type(data) == list or type(data) == tuple) and len(data) >= 2 \
+           and type(data[0]) == tuple:
             bal, lines = 0, [0, []]
             for line in data:
                 kwargs = {}
-                if len(line)>=2:
+                if len(line) >= 2:
                     kwargs['account'] = Account.get_account(line[0])
                     kwargs['value'] = value = decimal.Decimal(line[1])
-                    if len(line)>2:
+                    if len(line) > 2:
                         kwargs['note'] = line[2]
                     bal += value
                 if value > 0:
                     lines[0] += value
                 lines[1].append(kwargs)
             if bal:
-                raise Exception("Lines do not balance. Total is {}".format(bal))
+                raise Exception(
+                    "Lines do not balance. Total is {}".format(bal))
             else:
                 return lines
 
         # case simple/single:
-        if type(data)==tuple and len(data)==3:
+        if type(data) == tuple and len(data) == 3:
             """ BEWARE!! Transactions may be posted upside-down. CHECK USAGE.
             Note: only multi-line transactions/lines can allow Line notes.
             Necessary compromise for simplicity 3-obj adding allows.
@@ -281,7 +299,7 @@ Input should be:
                 cr_account = Account.get_account(data[1])
                 value = decimal.Decimal(data[2])
                 if dr_account and cr_account and value \
-                   and not dr_account==cr_account:
+                   and not dr_account == cr_account:
                     return (value,
                             [{'account': dr_account, 'value': value},
                              {'account': cr_account, 'value': -value}])
@@ -291,14 +309,14 @@ Input should be:
         raise Exception(ERR_MSG)
 
 
-
 class Line(models.Model):
     """
     Value is absolute value in General Ledger.
 
     Correct DR/CR value to be calculated in relevant view or subledger.
     """
-    transaction = models.ForeignKey(Transaction, null=False, related_name="lines")
+    transaction = models.ForeignKey(
+        Transaction, null=False, related_name="lines")
 
     account = models.ForeignKey(Account, null=False, related_name="lines")
 

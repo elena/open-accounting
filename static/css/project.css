@@ -4,6 +4,8 @@
  * Licensed under MIT (https://github.com/BlackrockDigital/startbootstrap-sb-admin/blob/master/LICENSE)
  */
 body {
+    font-family: "Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    font-size: 0.83rem;
   background: #292b2c; }
 
 body.fixed-nav {
@@ -14,9 +16,6 @@ body.fixed-nav {
 
 .content-wrapper {
   background: white; }
-  @media (min-width: 992px) {
-    .content-wrapper {
-      margin-left: 250px; } }
 
 .scroll-to-top {
   line-height: 45px;
@@ -45,6 +44,19 @@ body.fixed-nav {
 
 .z-1 {
   z-index: 1; }
+
+.table td {
+  padding: .3rem;}
+
+.nowrap {
+  white-space: nowrap;}
+
+.btn-xs {
+    margin: 2px 1px;
+    padding: 1px 5px;
+    font-size: 12px;
+    line-height: 1.5;
+    border-radius: 3px;
 
 .card-block-icon {
   font-size: 5rem;

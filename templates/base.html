@@ -6,72 +6,137 @@
 
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="">
-    <meta name="author" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title></title>
+    <meta name="description" content="">
+    <meta name="author" content="Elena Williams @elequ">
+
+    <title>{% block title %}{{ homepage.title }}{% endblock %}</title>
 
     <!-- Bootstrap Core CSS -->
-    <link href="{% static "css/bootstrap.min.css" %}" rel="stylesheet">
+    <link href="{% static "vendor/bootstrap/css/bootstrap.min.css" %}" rel="stylesheet">
 
     <!-- Custom CSS -->
-    <link href="{% static "css/sb-admin.css" %}" rel="stylesheet">
+    <link href="{% static "css/project.css" %}" rel="stylesheet">
 
-    <!-- Morris Charts CSS -->
-    <link href="{% static "css/plugins/morris.css" %}" rel="stylesheet">
+    <!-- Plugin CSS -->
+    <link href="{% static "vendor/datatables/dataTables.bootstrap4.css" %}" rel="stylesheet">
 
     <!-- Custom Fonts -->
-    <link href="{% static "font-awesome/css/font-awesome.min.css" %}" rel="stylesheet" type="text/css">
-
-    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
-    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
-    <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-    <![endif]-->
+    <link href="{% static "vendor/font-awesome/css/font-awesome.min.css" %}" rel="stylesheet" type="text/css">
 
 </head>
 
-<body>
+<body id="page-top">
 
-    <div id="wrapper">
+    <!-- Navigation -->
+    <nav id="mainNav" class="navbar static-top navbar-toggleable-md navbar-inverse bg-inverse">
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarExample" aria-controls="navbarExample" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand" href="#">Double-Entry Accounting + Subledgers</a>
+        <div class="collapse navbar-collapse" id="navbarExample">
 
-        <div id="page-wrapper">
-
-            <div class="container-fluid">
-
-                <div class="row">
-                    <div class="col-lg-12">
-
-                        {% block body %}
-                        {% endblock %}
-
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle mr-lg-2" href="#" id="messagesDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-fw fa-envelope"></i> <span class="hidden-lg-up">Messages <span class="badge badge-pill badge-primary">12 New</span></span>
+                        <span class="new-indicator text-primary hidden-md-down"><i class="fa fa-fw fa-circle"></i><span class="number">12</span></span>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="messagesDropdown">
+                        <h6 class="dropdown-header">New Messages:</h6>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">
+                            <strong>David Miller</strong> <span class="small float-right text-muted">11:21 AM</span>
+                            <div class="dropdown-message small">Hey there! This new version of SB Admin is pretty awesome! These messages clip off when they reach the end of the box so they don't overflow over to the sides!</div>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">
+                            <strong>Jane Smith</strong> <span class="small float-right text-muted">11:21 AM</span>
+                            <div class="dropdown-message small">I was wondering if you could meet for an appointment at 3:00 instead of 4:00. Thanks!</div>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">
+                            <strong>John Doe</strong> <span class="small float-right text-muted">11:21 AM</span>
+                            <div class="dropdown-message small">I've sent the final files over to you for review. When you're able to sign off of them let me know and we can discuss distribution.</div>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item small" href="#">
+                            View all messages
+                        </a>
                     </div>
-                </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle mr-lg-2" href="#" id="alertsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-fw fa-bell"></i> <span class="hidden-lg-up">Alerts <span class="badge badge-pill badge-warning">6 New</span></span>
+                        <span class="new-indicator text-warning hidden-md-down"><i class="fa fa-fw fa-circle"></i><span class="number">6</span></span>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="alertsDropdown">
+                        <a class="dropdown-item" href="#">Action</a>
+                        <a class="dropdown-item" href="#">Another action</a>
+                        <a class="dropdown-item" href="#">Something else here</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <form class="form-inline my-2 my-lg-0 mr-lg-2">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Search for...">
+                            <span class="input-group-btn">
+                        <button class="btn btn-primary" type="button"><i class="fa fa-search"></i></button>
+                    </span>
+                        </div>
+                    </form>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="fa fa-fw fa-sign-out"></i> Logout</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="content-wrapper py-3">
+
+        <div class="container-fluid">
 
 
-                <!-- /.row -->
+            <!-- Breadcrumbs -->
+            {% block breadcrumbs %}
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item active"></li>
+            </ol>
+            {% endblock %}
 
-            </div>
-            <!-- /.container-fluid -->
+
+            {% block content %}
+            {% endblock %}
+
 
         </div>
-        <!-- /#page-wrapper -->
+        <!-- /.container-fluid -->
 
     </div>
-    <!-- /#wrapper -->
+    <!-- /.content-wrapper -->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fa fa-chevron-up"></i>
+    </a>
 
-    <!-- jQuery -->
-    <script src="{% static "js/jquery.js" %}"></script>
+    <!-- Bootstrap core JavaScript -->
+    <script src="{% static "vendor/jquery/jquery.min.js" %}"></script>
+    <script src="{% static "vendor/tether/tether.min.js" %}"></script>
+    <script src="{% static "vendor/bootstrap/js/bootstrap.min.js" %}"></script>
 
-    <!-- Bootstrap Core JavaScript -->
-    <script src="{% static "js/bootstrap.min.js" %}"></script>
+    <!-- Plugin JavaScript -->
+    <script src="{% static "vendor/jquery-easing/jquery.easing.min.js" %}"></script>
+    <script src="{% static "vendor/chart.js/Chart.min.js" %}"></script>
+    <script src="{% static "vendor/datatables/jquery.dataTables.js" %}"></script>
+    <script src="{% static "vendor/datatables/dataTables.bootstrap4.js" %}"></script>
 
-    <!-- Morris Charts JavaScript -->
-    <script src="{% static "js/plugins/morris/raphael.min.js" %}"></script>
-    <script src="{% static "js/plugins/morris/morris.min.js" %}"></script>
-    <script src="{% static "js/plugins/morris/morris-data.js" %}"></script>
+    <!-- Custom scripts for this template -->
+    <script src="{% static "js/project.js" %}"></script>
+
+    {% block extra_static %}
+    {% endblock %}
 
 </body>
 

@@ -1,0 +1,31 @@
+{% extends "subledgers/creditors/base.html" %}
+
+
+{% block title %}{{ homepage.title }} - Creditor Invoice Upload{{ block.super }}{% endblock %}
+
+
+{% block breadcrumbs %}
+<ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="/">Home</a></li>
+  <li class="breadcrumb-item"><a href="{% url "creditors:creditors-index" %}">Creditors</a></li>
+  <li class="breadcrumb-item active">Upload Creditors</li>
+</ol>
+{% endblock %}
+
+
+{% block content %}
+
+  <div class="card-block">
+
+    <h5>Upload</h5>
+    <p>
+    <form method="post" action="." id="id-form">{% csrf_token %}
+      {% for field in form %}
+      <p>{{ field }}</p>
+      {% endfor %}
+      <input type="submit" value="OK">
+    </form>
+    </p>
+
+  </div>
+{% endblock %}

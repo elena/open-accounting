@@ -25,6 +25,9 @@ urlpatterns = [
 
     # internal app urls
 
+    url(r'^accounts/',
+        include('ledgers.urls')),
+
     url(r'^bank/reconciliations/',
         include('subledgers.bank_reconciliations.urls')),
 

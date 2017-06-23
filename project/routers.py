@@ -5,6 +5,7 @@ from rest_framework import routers
 
 # internal apps
 from entities import views as entities_views
+from ledgers import views as ledgers_views
 from subledgers.bank_reconciliations import views as bank_reconciliations_views
 
 
@@ -22,11 +23,17 @@ additional_routing_patterns = [
 
 router = routers.SimpleRouter()
 
+# Django Contrib
+router.register(r'users',
+                ledgers_views.UserViewSet)
 
 # Entities
 router.register(r'entities',
                 entities_views.EntityViewSet)
 
+# Ledgers
+router.register(r'ledgers',
+                ledgers_views.TransactionViewSet)
 
 # Subledgers
 router.register(r'bank-reconciliations',

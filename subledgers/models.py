@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 from decimal import Decimal
-from ledgers.models import Transaction
 
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
@@ -23,7 +22,7 @@ class Entry(models.Model):
     For use with at least: Sales, Expenses
     """
 
-    transaction = models.OneToOneField(Transaction)
+    transaction = models.OneToOneField('ledgers.Transaction')
 
     class Meta:
         abstract = True
@@ -40,7 +39,7 @@ class Invoice(Entry):
 
     Transaction contains:
     from *abstract* `Entry`
-      transaction = models.OneToOneField(Transaction)
+      transaction = models.OneToOneField('ledgers.Transaction')
       - *Date
       - *Value
       - Note
@@ -52,9 +51,11 @@ class Invoice(Entry):
 
     invoice_number = models.CharField(max_length=128)
 
-    order_number = models.CharField(max_length=128, blank=True, default="")
+    order_number = models.CharField(
+        max_length=128, blank=True, default="", null=True)
 
-    reference = models.CharField(max_length=128, blank=True, default="")
+    reference = models.CharField(
+        max_length=128, blank=True, default="", null=True)
 
     gst_total = models.DecimalField(
         max_digits=19, decimal_places=2, default=Decimal('0.00'))
@@ -74,7 +75,7 @@ class Payment(models.Model):
     Rather than fields that matter, methods matter.
     """
 
-    transaction = models.OneToOneField(Transaction)
+    transaction = models.OneToOneField('ledgers.Transaction')
 
     class Meta:
         abstract = True

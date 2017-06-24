@@ -5,8 +5,8 @@ from django.views import generic
 from rest_framework import permissions
 from rest_framework import viewsets
 
-from .models import Transaction
 from .serializers import (TransactionSerializer, UserSerializer)
+from .models import Account, Transaction, Line
 
 
 class TransactionViewSet(viewsets.ModelViewSet):

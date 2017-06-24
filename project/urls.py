@@ -19,7 +19,7 @@ from django.conf import settings
 from django.conf.urls import include, url
 from django.contrib import admin
 
-from . import routers, views
+from . import routers
 from subledgers.views import upload_view
 
 

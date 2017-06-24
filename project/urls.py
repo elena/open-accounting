@@ -26,6 +26,8 @@ from subledgers.views import upload_view
 urlpatterns = [
 
     url(r'upload/', upload_view),
+    # trivial urls
+    url(r'^$', TemplateView.as_view(template_name="index.html")),
 
     # internal app urls
 

@@ -1,0 +1,35 @@
+{% extends "ledgers/base.html" %}
+
+
+{% block title %}Chart of Accounts - {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="/">Home</a></li>
+  <li class="breadcrumb-item active">Accounts</li>
+</ol>
+{% endblock %}
+
+
+{% block content %}
+
+{% for object in object_list %}
+
+{% ifchanged object.element %}
+<br>
+<h5>{{ object.get_element_display }}</h5>
+{% endifchanged %}
+
+{% if not object.parent %}
+{{object}}
+{% elif object.parent == object %}
+<strong>{{object}}</strong>
+{% else %}
+&nbsp;  {{object}}
+{% endif %}
+
+<br>
+
+{% endfor %}
+
+{% endblock %}

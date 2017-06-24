@@ -29,7 +29,7 @@ urlpatterns = [
 
     # internal app urls
 
-    url(r'^accounts/',
+    url(r'^ledgers/',
         include('ledgers.urls')),
 
     url(r'^bank/reconciliations/',

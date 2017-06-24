@@ -70,15 +70,5 @@ class CreditorPayment(SpecifyRelation, Payment):
     pass
 
 
-class CreditorPaymentInvoice(Payment):
-    """ If you absolutely positively want to match invoices to payments.
-    But please don't do this. It's never actually necessary and always
-    a waste of perfectly good time. Statements are all that matter.
-    """
 
-    payment = models.ForeignKey(
-        'creditors.CreditorPayment', null=True, blank=True)
 
-    invoice = models.ForeignKey(
-        'creditors.CreditorInvoice', null=True, blank=True)
-    value_paid = models.DecimalField(max_digits=19, decimal_places=2)

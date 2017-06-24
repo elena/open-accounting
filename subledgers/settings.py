@@ -1,13 +1,6 @@
 # -*- coding: utf-8 -*-
 from django.conf import settings
 
-from subledgers.creditors.models import Creditor, CreditorInvoice
-# from subledgers.debtors.models import Debtor, DebtorInvoice
-from subledgers.bank_reconciliations.models import BankTransaction
-# from subledgers.journals.models import JournalEntry
-# from subledgers.expenses.models import Expense
-# from subledgers.sales.models import Sale
-
 
 DEFAULT_TERMS = getattr(settings, 'SUBLEDGERS_DEFAULT_TERMS', 14)
 
@@ -75,7 +68,7 @@ OBJECT_SETTINGS = {
     #     'required_fields': FIELDS_TRANSACTION_REQUIRED,
     # },
     'BankTransaction': {
-        'source': BankTransaction,
+        'source': 'subledgers.bank_reconciliations.models.BankTransaction',
         'tb_account': DEFAULT_BANK_ACCOUNT,
         'is_DR_in_tb': True,
         'fields': FIELDS_TRANSACTION,
@@ -112,26 +105,27 @@ OBJECT_SETTINGS = {
     # },
 
     'CreditorInvoice': {
-        'uses_invoices': True,
-        'entity': Creditor,
-        'source': CreditorInvoice,
+        # 'abstract': 'INVOICE',
+        'entity_class': 'subledgers.creditors.models.Creditor',
+        'source': 'subledgers.creditors.models.CreditorInvoice',
         'tb_account': ACCOUNTS_PAYABLE_ACCOUNT,
         'is_CR_in_tb': True,
         'fields': FIELDS_INVOICE,
         'required_fields': FIELDS_INVOICE_REQUIRED,
     },
-    # 'CreditorPayment': {
-    #     'entity': Creditor,
-    #     'source': CreditorPayment,
-    #     'tb_account':
-    #     'is_CR_in_tb':
-    #     'fields':
-    #     'required_fields':
-    # },
+    'CreditorPayment': {
+        # 'abstract': 'PAYMENT',
+        'entity_class': 'subledgers.creditors.models.Creditor',
+        'source': 'subledgers.creditors.models.CreditorPayment',
+        'tb_account': ACCOUNTS_PAYABLE_ACCOUNT,
+        # 'is_CR_in_tb': @@ FIX THIS,
+        'fields': FIELDS_PAYMENT,
+        'required_fields': FIELDS_PAYMENT_REQUIRED,
+    },
 
 
     # 'DebtorInvoice': {
-    #     'uses_invoices': True,
+    #     'abstract': 'INVOICE',
     #     'entity': Debtor,
     #     'source': DebtorInvoice,
     #     'tb_account':  ACCOUNTS_RECEIVABLE_ACCOUNT,
@@ -142,5 +136,5 @@ OBJECT_SETTINGS = {
 
 }
 
-OBJECT_CHOICES = sorted([(x, OBJECT_SETTINGS[x]['source']._meta.verbose_name.title())  # noqa
-                         for x in OBJECT_SETTINGS])
+VALID_SOURCES = [OBJECT_SETTINGS[obj_name]['source']
+                 for obj_name in [key for key in OBJECT_SETTINGS]]

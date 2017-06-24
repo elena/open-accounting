@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 from django import forms
+from django.utils.module_loading import import_string
 
-from subledgers.settings import OBJECT_CHOICES
+from subledgers.settings import OBJECT_SETTINGS
 
 
-OBJECT_CHOICES = OBJECT_CHOICES + [
-    (None, "Mixed (must define `type` column)"),
-]
+OBJECT_CHOICES = sorted([(
+    x, import_string(OBJECT_SETTINGS[x]['source'])._meta.verbose_name.title())
+    for x in OBJECT_SETTINGS]) \
+    + [(None, "Mixed (must define `type` column)"), ]
 
 
 class BasicForm(forms.Form):

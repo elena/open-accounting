@@ -35,10 +35,22 @@ SALES_CLEARING_ACCOUNT = getattr(
     settings, 'SALES_CLEARNING_ACCOUNT', '01-0300')
 
 
-# `user` also, but considered separately
-FIELDS_TRANSACTION_REQUIRED = ['date', 'value']
+# @@ TODO Could use whatever Django db|forms use to get required fields.
+# more control doing as follows
 
-FIELDS_TRANSACTION = FIELDS_TRANSACTION_REQUIRED + ['note', 'source', 'user']
+# `user` also, but considered separately
+FIELDS_TRANSACTION_REQUIRED = ['date', 'value', 'lines', 'user',
+                               'object_name', 'source']
+
+FIELDS_TRANSACTION = FIELDS_TRANSACTION_REQUIRED + ['note']
+
+FIELDS_ENTRY_REQUIRED = []
+
+FIELDS_ENTRY = FIELDS_ENTRY_REQUIRED + ['additional', 'relation']
+
+FIELDS_PAYMENT_REQUIRED = ['relation', 'bank_transaction_id']
+
+FIELDS_PAYMENT = FIELDS_PAYMENT_REQUIRED + ['additional']
 
 FIELDS_INVOICE_REQUIRED = ['invoice_number', 'gst_total', 'relation']
 
@@ -46,11 +58,10 @@ FIELDS_INVOICE_REQUIRED = ['invoice_number', 'gst_total', 'relation']
 FIELDS_INVOICE = FIELDS_INVOICE_REQUIRED + \
     ['order_number', 'reference', 'due_date', 'relation']
 
-FIELDS_ALL_REQUIRED = FIELDS_TRANSACTION_REQUIRED + FIELDS_INVOICE_REQUIRED
-
 FIELD_IS_DATE = ['date']
 FIELD_IS_DECIMAL = ['value', 'gst_total']
-FIELD_IS_RELATION = ['entity', 'creditor', 'debtor', 'creditors', 'debtors']
+FIELD_IS_RELATION = ['relation', 'entity',
+                     'creditor', 'debtor', 'creditors', 'debtors']
 
 
 """ Both: `is_CR_in_tb` and `is_DR_in_tb` to be as explicit as possible.

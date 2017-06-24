@@ -32,8 +32,11 @@ SALES_CLEARING_ACCOUNT = getattr(
 # more control doing as follows
 
 # `user` also, but considered separately
-FIELDS_TRANSACTION_REQUIRED = ['date', 'value', 'lines', 'user',
-                               'object_name', 'source']
+
+OTHER_REQUIRED_FIELDS = ['object_name', 'cls', 'relation', 'lines']
+# manually add 'lines' to Transacton.save(lines=lines)
+
+FIELDS_TRANSACTION_REQUIRED = ['date', 'value', 'user', 'source']
 
 FIELDS_TRANSACTION = FIELDS_TRANSACTION_REQUIRED + ['note']
 
@@ -105,8 +108,8 @@ OBJECT_SETTINGS = {
     # },
 
     'CreditorInvoice': {
-        # 'abstract': 'INVOICE',
-        'entity_class': 'subledgers.creditors.models.Creditor',
+        'is_GST': True,
+        'relation_class': 'subledgers.creditors.models.Creditor',
         'source': 'subledgers.creditors.models.CreditorInvoice',
         'tb_account': ACCOUNTS_PAYABLE_ACCOUNT,
         'is_CR_in_tb': True,
@@ -115,7 +118,7 @@ OBJECT_SETTINGS = {
     },
     'CreditorPayment': {
         # 'abstract': 'PAYMENT',
-        'entity_class': 'subledgers.creditors.models.Creditor',
+        'relation_class': 'subledgers.creditors.models.Creditor',
         'source': 'subledgers.creditors.models.CreditorPayment',
         'tb_account': ACCOUNTS_PAYABLE_ACCOUNT,
         # 'is_CR_in_tb': @@ FIX THIS,
@@ -125,7 +128,7 @@ OBJECT_SETTINGS = {
 
 
     # 'DebtorInvoice': {
-    #     'abstract': 'INVOICE',
+    #     'is_GST': True,
     #     'entity': Debtor,
     #     'source': DebtorInvoice,
     #     'tb_account':  ACCOUNTS_RECEIVABLE_ACCOUNT,

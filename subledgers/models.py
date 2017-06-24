@@ -51,6 +51,7 @@ class Entry(models.Model):
 
     def get_required(object_name):
         required = set([x for x in settings.FIELDS_TRANSACTION_REQUIRED]
+                       + [x for x in settings.OTHER_REQUIRED_FIELDS]
                        + [x for x in settings.OBJECT_SETTINGS[object_name]
                           ['required_fields']])
         return required
@@ -82,13 +83,13 @@ class Entry(models.Model):
         # 1. ModelObject
         try:
             source = utils.get_source(name)
-        except AttributeError:
+        except:
             pass
 
         # 2. object_name -- valid vanilla name, eg "CreditorInvoice"
         try:
             source = settings.OBJECT_SETTINGS[name]['source']
-        except KeyError:
+        except:
             pass
 
         # 3. source_str
@@ -96,7 +97,9 @@ class Entry(models.Model):
             cls = import_string(source)
             return cls
         else:
-            raise Exception("No valid `type` found for {}.".format(name))
+            raise Exception("No valid upload `type` {}.".format(name))
+
+        raise Exception("No valid `type` found for {}.".format(name))
 
     def dump_to_kwargs(dump, user, object_name=None, self=None):
         """ Main function for bringing together the elements of constructing
@@ -169,7 +172,8 @@ class Entry(models.Model):
             elif self:
                 cls = Entry.get_cls(self)
             else:
-                raise Exception("No `type` column used.")
+                raise Exception(
+                    "No `type` column specified, unable to create objects.")
 
             kwargs['cls'] = cls
             kwargs['object_name'] = object_name = cls.__name__
@@ -182,8 +186,9 @@ class Entry(models.Model):
                 if key in settings.FIELD_IS_DECIMAL:
                     kwargs[key] = utils.make_decimal(row_dict[key])
                 if key in settings.FIELD_IS_RELATION:
+                    entity_code = row_dict[key]
                     kwargs['relation'] = Relation.get_relation(
-                        row_dict[key], object_name)
+                        entity_code, object_name)
 
                 if object_name is None:
                     try:
@@ -213,8 +218,8 @@ class Entry(models.Model):
                         object_settings['tb_account'],
                         utils.set_CR(row_dict['value'])))
 
-                    # Include GST
-                    if object_settings['abstract'] is 'INVOICE':
+                    # @@ TODO facilitate other taxes and surcharges.
+                    if object_settings['is_GST']:
                         lines.append((
                             settings.GST_DR_ACCOUNT,
                             utils.set_DR(row_dict['gst_total'])))
@@ -225,8 +230,7 @@ class Entry(models.Model):
                         object_settings['tb_account'],
                         utils.set_DR(row_dict['value'])))
 
-                    # Include GST
-                    if object_settings['abstract'] is 'INVOICE':
+                    if object_settings['is_GST']:
                         lines.append((
                             settings.GST_CR_ACCOUNT,
                             utils.set_CR(row_dict['gst_total'])))
@@ -240,7 +244,7 @@ class Entry(models.Model):
 
             # 6. check and add
             # powerful check, will explode if not quite precisely correct
-            Entity.check_required(kwargs)
+            Entry.check_required(kwargs)
 
             list_kwargs.append(kwargs)
 
@@ -279,18 +283,16 @@ class Entry(models.Model):
 
         """
 
-        # new_transactions = []
-        # new_invoices = []
         new_objects = []
 
         for kwargs in list_kwargs:
 
-            transaction_kwargs, object_kwargs = make_transaction_dict_pair(  # noqa
+            cls = kwargs['cls']
+
+            transaction_kwargs, object_kwargs = Entry.make_transaction_dict_pair(  # noqa
                 kwargs)
 
-            object_settings = settings.OBJECT_SETTINGS[
-                object_kwargs['object_name']]
-            new_object = object_settings['source'](**object_kwargs)
+            new_object = cls(**object_kwargs)
 
             if live:
                 new_transaction = Transaction(**transaction_kwargs)
@@ -298,12 +300,6 @@ class Entry(models.Model):
                 new_object.transaction = new_transaction
                 new_object.save()
                 new_objects.append(new_object)
-
-            # # add objects to tracer bullets
-            # new_transactions.append(new_transaction)
-            # new_invoices.append(new_invoice)
-            # new_transactions.append(transaction_kwargs)
-            # new_invoices.append(invoice_kwargs)
 
         results = new_objects
 
@@ -396,7 +392,7 @@ class Relation(models.Model):
 
         name is required. Not sure when going to use this method.
         """
-
+        code = self.clean_code(code)
         _Relation = self._meta.model
         try:
             # try to get existing Creditor/Debtor (here as _Relation)
@@ -415,7 +411,7 @@ class Relation(models.Model):
                     entity = Entity.objects.create(code=code, name=name)
                     return _Relation.objects.create(entity=entity)
 
-    def get_relation(self, code, object_name=None):
+    def get_relation(code, object_name=None, self=None):
         """ get the correct related Entity for *this* whatever,
         eg `Creditor`/`Debtor`.
 
@@ -437,6 +433,6 @@ class Relation(models.Model):
         Doesn't need to be instance.
         """
         object_settings = settings.OBJECT_SETTINGS[object_name]
-        _Relation = import_string(object_settings.get('entity_class'))
+        _Relation = import_string(object_settings.get('relation_class'))
         return Relation.get_or_create_relation(
             Relation.clean_code(code), _Relation)

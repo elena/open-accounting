@@ -2,8 +2,6 @@
 import re
 
 from decimal import Decimal
-from django.db.models import Model
-from django.db.models.base import ModelBase
 from django.utils.module_loading import import_string
 
 

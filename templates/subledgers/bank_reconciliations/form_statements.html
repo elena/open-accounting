@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+
+{% block title %}Bank Statements Uploads - {{ block.super }}{% endblock %}
+
+
+{% block content %}
+
+<div class="row">
+
+  {% if success_obj %}{{ success_obj }} successfully created/found.{% endif %}
+
+  <form method="post" action="." id="id-form">{% csrf_token %}
+
+    {{form.as_p}}
+
+    <input type="submit" value="OK">
+
+  </form>
+
+</div>
+
+{% endblock %}

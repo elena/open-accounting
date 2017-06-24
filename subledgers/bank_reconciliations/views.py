@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 import dateparser
 
+# from django.core.urlresolvers import reverse, reverse_lazy
+# from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
 from django.views import generic
 
-from .forms import StatementUploadForm
-from .utils import bank_statement_import
 from rest_framework import viewsets
 
 from .models import BankTransaction
@@ -31,7 +31,7 @@ def add_statements(request):
     if request.method == 'POST':
         form = StatementUploadForm(request.POST)
         if form.is_valid():
-            context_data['success_obj'] = bank_statement_import(request.POST)
+            context_data['success_obj'] = import_bank_statement(request.POST)
     else:
         form = StatementUploadForm()
 

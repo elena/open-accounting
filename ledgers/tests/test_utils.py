@@ -8,6 +8,34 @@ from ledgers.models import Account
 from ledgers import utils
 
 
+class TestUtilsGetSource(TestCase, unittest.TestCase):
+
+    def test_get_source_Obj_passes(self):
+        test_input = Account
+        test_result = "ledgers.models.Account"
+        self.assertEqual(utils.get_source(test_input), test_result)
+
+    def test_get_source_Obj_instance_passes(self):
+        test_input = Account()
+        test_result = "ledgers.models.Account"
+        self.assertEqual(utils.get_source(test_input), test_result)
+
+    def test_get_source_Obj_object_passes(self):
+        Account.objects.create(element="01", number="0001")
+        test_input = Account.objects.first()
+        test_result = "ledgers.models.Account"
+        self.assertEqual(utils.get_source(test_input), test_result)
+
+    def test_get_source_str_passes(self):
+        test_input = 'ledgers.models.Account'
+        test_result = "ledgers.models.Account"
+        self.assertEqual(utils.get_source(test_input), test_result)
+
+    def test_get_source_failure(self):
+        test_input = "Account"
+        self.assertRaises(ImportError, utils.get_source, test_input)
+
+
 class TestUtilsMakeDecimal(TestCase, unittest.TestCase):
 
     def test_make_decimal_str_num_passes(self):

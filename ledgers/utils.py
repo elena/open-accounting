@@ -1,11 +1,28 @@
 # -*- coding: utf-8 -*-
 import re
+
 from decimal import Decimal
+from django.db.models import Model
+from django.db.models.base import ModelBase
+from django.utils.module_loading import import_string
 
 
 def get_source(source):
-    """ source is project model Class """
-    return "{}".format(source.__module__).replace("models", source.__name__)
+    """ source is project model Class.
+
+    input class Object or string path
+
+    Returns consistent output to save as reference.
+    """
+    try:
+        Obj = source._meta.model
+    except AttributeError:
+        Obj = import_string(source)
+    return "{}.{}".format(Obj.__module__, Obj.__name__)
+
+
+def get_source_name(source):
+    return source.split(".").last()
 
 
 def make_decimal(value):

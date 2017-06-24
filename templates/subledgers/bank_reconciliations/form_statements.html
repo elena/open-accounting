@@ -6,13 +6,15 @@
 
 {% block content %}
 
-<div class="row">
+<div class="card-block">
 
   {% if success_obj %}{{ success_obj }} successfully created/found.{% endif %}
 
   <form method="post" action="." id="id-form">{% csrf_token %}
 
-    {{form.as_p}}
+    <table>
+      {{ form }}
+    </table>
 
     <input type="submit" value="OK">
 

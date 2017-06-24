@@ -1,27 +1,40 @@
 # -*- coding: utf-8 -*-
+from subledgers.models import Invoice, Payment, Relation
 from django.db import models
 
-from .. import settings
-from ..models import Invoice, Payment
-from subledgers.models import Invoice, Payment
 
-
-class Creditor(models.Model):
-    """ To add additional details only interesting for this subledger.
+class Creditor(Relation):
+    """ Group all Entity objects who have terms and invoices to allow for
+    simpler queries.
     """
+
     entity = models.ForeignKey('entities.Entity', related_name='creditors')
 
-    terms = models.IntegerField(default=settings.DEFAULT_TERMS)
+    terms = models.IntegerField(default=14)  # settings.DEFAULT_TERMS)
 
     def __str__(self):
         return self.entity.name
 
 
-class CreditorInvoice(Invoice):
-    """ `Invoice` is `Entry` that has more details.
+class SpecifyRelation(Relation, models.Model):
+
+    # *** ABSTRACT CLASS ***
+
+    """ Convenience class: Rather than 'Entity' relation should be 'Creditor'
+
+    This will be convenient/less messy for queries later.
     """
 
     relation = models.ForeignKey('creditors.Creditor')
+
+    class Meta:
+        abstract = True
+
+
+class CreditorInvoice(SpecifyRelation, Invoice):
+
+    """ `Invoice` is `Entry` that has more details.
+    """
 
     def __str__(self):
         return "[{}] {} -- {} -- ${}".format(self.relation.entity.code,
@@ -45,20 +58,24 @@ class CreditorInvoice(Invoice):
     """
 
 
-class CreditorPayment(Payment):
-    """ `Payment` is `Transaction` where the methods matter.
+class CreditorPayment(SpecifyRelation, Payment):
+    """ `Payment` has:
+
+    `Entity` so can know status of account
+
+    `Payment` <<>> `BankTransaction` so can know details of payment.
+
+    `Transaction` ledger for clearing ACP
     """
-
-    # Intentional not compulsory.
-    # Payments can be reconciled to here (objects created).
-    # It is ALWAYS the case that some payments will not line up to
-    relation = models.ForeignKey('creditors.Creditor', null=True, blank=True)
-
-    value = models.DecimalField(max_digits=19, decimal_places=2,
-                                null=True, blank=True, default=None)
+    pass
 
 
 class CreditorPaymentInvoice(Payment):
+    """ If you absolutely positively want to match invoices to payments.
+    But please don't do this. It's never actually necessary and always
+    a waste of perfectly good time. Statements are all that matter.
+    """
+
     payment = models.ForeignKey(
         'creditors.CreditorPayment', null=True, blank=True)
 

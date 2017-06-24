@@ -1,46 +1,10 @@
 # -*- coding: utf-8 -*-
-import unittest
 from datetime import date
 from decimal import Decimal
 from django.contrib.auth.models import User
 from django.test import TestCase  # , Client
 
 from ledgers.models import Account, Transaction
-from ledgers import utils
-
-
-class TestUtilsGetSource(TestCase, unittest.TestCase):
-
-    def test_get_source_passes(self):
-        test_input = Account
-        test_result = "ledgers.Account"
-        self.assertEqual(utils.get_source(test_input), test_result)
-
-    def test_get_source_failure(self):
-        test_input = "Account"
-        self.assertRaises(Exception, utils.get_source, test_input)
-
-
-class TestUtilsMakeDecimal(TestCase, unittest.TestCase):
-
-    def test_make_decimal_str_num_passes(self):
-        test_input = "5"
-        test_result = Decimal('5.00')
-        self.assertEqual(utils.make_decimal(test_input), test_result)
-
-    def test_make_decimal_int_passes(self):
-        test_input = int(5)
-        test_result = Decimal('5.00')
-        self.assertEqual(utils.make_decimal(test_input), test_result)
-
-    def test_make_decimal_Decimal_passes(self):
-        test_input = Decimal(5)
-        test_result = Decimal('5.00')
-        self.assertEqual(utils.make_decimal(test_input), test_result)
-
-    def test_make_decimal_str_alpha_failure(self):
-        test_input = "asdf"
-        self.assertRaises(Exception, utils.make_decimal, test_input)
 
 
 class TestTransactionSave(TestCase):

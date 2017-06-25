@@ -1,14 +1,13 @@
-{% extends "subledgers/creditors/base.html" %}
+{% extends "subledgers/base.html" %}
 
 
-{% block title %}{{ homepage.title }} - Creditor Invoice Upload{{ block.super }}{% endblock %}
+{% block title %}{{ homepage.title }} - Upload Form {{ block.super }}{% endblock %}
 
 
 {% block breadcrumbs %}
 <ol class="breadcrumb">
   <li class="breadcrumb-item"><a href="/">Home</a></li>
-  <li class="breadcrumb-item"><a href="{% url "creditors:creditors-index" %}">Creditors</a></li>
-  <li class="breadcrumb-item active">Upload Creditors</li>
+  <li class="breadcrumb-item active">Upload</li>
 </ol>
 {% endblock %}
 
@@ -17,7 +16,34 @@
 
   <div class="card-block">
 
-    <h5>Upload</h5>
+
+    <ul class="list-group-item-warning" style="list-style: none;">
+
+      <li><br>If select "Mixed" must define a <b><code>type</code></b> column.<br><br></li>
+
+      <li>Optional: <code>entity</code>/<code>creditor</code> column -- use 6-digit entity code<br><br></li>
+
+      <li><b>First Row is Special</b>, will match exactly, choices are:<br>
+        <b>** Necessary **</b>:
+        <ul>
+           <li><code>date</code></li>
+          <li><code>invoice_number</code></li>
+          <li><code>value</code></li>
+          <li><code>gst_total</code> ** not necessary but usually should be included</li>
+          <li><i><code>[nn-nnnn]</code></i> ** must include at least 1, can add multiple,
+            GST-free value.</li>
+        </ul>
+        Other available fields:
+        <ul>
+          <li><code>order_number</code></li>
+          <li><code>reference</code></li>
+          <li><code>due_date</code></li>
+          <li><code>note</code><br><br></li>
+        </ul>
+      </li>
+
+    </ul>
+
     <p>
     <form method="post" action="." id="id-form">{% csrf_token %}
       {% for field in form %}

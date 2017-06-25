@@ -12,6 +12,17 @@
 
   <div class="card-block">
 
+    <h4>General</h4>
+
+    <br>
+
+    <p>
+      <a href="/admin/">
+        <strong>Admin</strong> -- /admin/
+      </a>
+    </p>
+
+  </div>
 
   <div class="card-block">
 
@@ -22,25 +33,37 @@
     <h5>Accounts</h5>
     <p>
       <a href="{% url "ledgers:accounts-list" %}">
-        <strong>View Chart of Accounts</strong> -- /ledgers/accounts/
+        <strong>View Chart of Accounts</strong> -- {% url "ledgers:accounts-list" %}
       </a>
     </p>
 
+    <h5>Entities</h5>
+    <p>
+      <a href="/admin/entities/">
+        <strong>Entities Admin</strong> -- /admin/entities/
+      </a>
+    </p>
 
   </div>
 
   <div class="card-block">
 
+    <h4>Subledgers</h4>
+
+    <br>
 
     <h5>Bank Statements</h5>
     <p>
       <a href="{% url "bank-reconciliations:bank-reconciliation-index" %}">
-        <strong>View Bank Reconciliations</strong> -- /bank/reconciliations/
+        <strong>View Bank Reconciliations</strong> -- {% url "bank-reconciliations:bank-reconciliation-index" %}
       </a>
     </p>
+
+
+    <h5>Upload Bank Statements</h5>
     <p>
       <a href="{% url "bank-reconciliations:bank-statement-upload" %}">
-        <strong>Upload Bank Statements</strong> -- /bank/reconciliations/statements/
+        <strong>Upload Bank Statements</strong> -- {% url "bank-reconciliations:bank-statement-upload" %}
       </a>
     </p>
 

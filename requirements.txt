@@ -2,3 +2,4 @@ django==1.11.2
 django-debug-toolbar==1.8
 djangorestframework==3.6.3
 dateparser==0.6.0
+approx-dates==0.0.1

@@ -17,6 +17,27 @@ class AccountQuerySet(models.query.QuerySet):
         element, number = code.split("-")
         return self.filter(element=element, number=number).first()
 
+    # @@ TODO add tests for remainder of Account qs
+
+    def range(self, start=None, end=None):
+        return self.filter(lines__transaction__date__range=(start, end))
+
+    def day(self, day):
+        return self.filter(lines__transaction__date=day)
+
+    def month(self, month):
+        approx_date = ApproxDate.from_iso8601(month)
+        return self.filter(lines__transaction__date__range=(
+            approx_date.earliest_date,
+            approx_date.latest_date))
+
+    def fyear(self, fyear=settings.CURRENT_FYEAR):
+        return self.filter(lines__transaction__date__range=(
+            settings.FINANCIAL_YEARS[fyear]))
+
+    def total(self):
+        return self.annotate(total=Sum('lines__value'))
+
 
 class LineQuerySet(models.query.QuerySet):
     def range(self, start=None, end=None):

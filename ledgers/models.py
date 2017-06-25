@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import re
 import decimal
-import warnings
 from django.db import models
 from django.db.models import Sum
 from django.conf import settings
 
-from . import querysets
+from ledgers import querysets
 from ledgers.settings import FINANCIAL_YEARS_CHOICES
 
 
@@ -59,6 +58,7 @@ class CurrentFinancialYear(models.Model):
         CurrentFinancialYear.objects.delete()
         super(CurrentFinancialYear, self).save(*args, **kwargs)
 
+
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
 # CHART of ACCOUNTS (CofA)
@@ -94,8 +94,8 @@ class Account(models.Model):
     description = models.TextField(blank=True, default='')
 
     # Accounts which are "hard" referenced by code.
-    special_account = models.CharField(max_length=8, choices=SPECIAL, blank=True,
-                                       null=True, default=None)
+    special_account = models.CharField(max_length=8, choices=SPECIAL,
+                                       blank=True, null=True, default=None)
 
     objects = querysets.AccountQuerySet.as_manager()
 
@@ -339,6 +339,17 @@ class Line(models.Model):
     value = models.DecimalField(max_digits=19, decimal_places=2)
 
     note = models.CharField(max_length=2048, blank=True, default="")
+
+    objects = querysets.LineQuerySet.as_manager()
+
+    def __str__(self):
+        name = "[{acc}] {date} ${val}".format(
+            acc=self.account.get_code(), val=self.value,
+            date=self.transaction.date)
+        if self.transaction.source:
+            name = "{} -- {}".format(name,
+                                     self.transaction.source.split(".")[-1])
+        return name
 
     def save(self, *args, **kwargs):
         obj = super(Line, self).save(*args, **kwargs)

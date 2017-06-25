@@ -7,6 +7,7 @@ from django.db.models import Sum
 from django.conf import settings
 
 from . import querysets
+from ledgers.settings import FINANCIAL_YEARS_CHOICES
 
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
@@ -44,6 +45,19 @@ SPECIAL = [
     ('suspense', 'Holding/Suspense'),
 ]
 
+
+class CurrentFinancialYear(models.Model):
+    current_financial_year = models.CharField(
+        max_length=3, choices=FINANCIAL_YEARS_CHOICES)
+
+    def __str__(self):
+        return self.current_financial_year
+
+    def save(self, *args, **kwargs):
+        # Only one current Financial Year can ever be selected.
+        # (delete whatever exists)
+        CurrentFinancialYear.objects.delete()
+        super(CurrentFinancialYear, self).save(*args, **kwargs)
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 

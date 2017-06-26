@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 from approx_dates.models import ApproxDate
 
-from django.conf import settings
 from django.db import models
+from django.db.models import Sum
+from ledgers.periods import settings
+from ledgers.periods.models import CurrentFinancialYear
 
 
 class AccountQuerySet(models.query.QuerySet):
@@ -31,7 +33,7 @@ class AccountQuerySet(models.query.QuerySet):
             approx_date.earliest_date,
             approx_date.latest_date))
 
-    def fyear(self, fyear=settings.CURRENT_FYEAR):
+    def fyear(self, fyear=CurrentFinancialYear.objects.get()):
         return self.filter(lines__transaction__date__range=(
             settings.FINANCIAL_YEARS[fyear]))
 
@@ -52,6 +54,6 @@ class LineQuerySet(models.query.QuerySet):
             approx_date.earliest_date,
             approx_date.latest_date))
 
-    def fyear(self, fyear=settings.CURRENT_FYEAR):
+    def fyear(self, fyear=CurrentFinancialYear.objects.get()):
         return self.filter(transaction__date__range=(
             settings.FINANCIAL_YEARS[fyear]))

@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from .models import Transaction, Line, Account
+from .models import Account, Transaction, Line
+
+
+class AccountAdmin(admin.ModelAdmin):
+    list_display = ('get_code', 'number', 'element', 'name')
+    list_filter = ['element']
+    model = Account
 
 
 class TransactionLineInline(admin.TabularInline):
@@ -15,11 +21,5 @@ class TransactionAdmin(admin.ModelAdmin):
     ]
 
 
-class AccountAdmin(admin.ModelAdmin):
-    list_display = ('get_code', 'number', 'element', 'name')
-    list_filter = ['element']
-    model = Account
-
-
-admin.site.register(Transaction, TransactionAdmin)
 admin.site.register(Account, AccountAdmin)
+admin.site.register(Transaction, TransactionAdmin)

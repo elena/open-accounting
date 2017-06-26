@@ -56,10 +56,12 @@ INSTALLED_APPS = [
 
     # Ledgers/Subledgers -- tightly coupled
     'ledgers',
+    'ledgers.periods',
     'ledgers.bank_accounts',
+
     'subledgers',
-    'subledgers.creditors',
     'subledgers.bank_reconciliations',
+    'subledgers.creditors',
 
     # Other local apps
     'entities',

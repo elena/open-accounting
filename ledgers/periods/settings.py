@@ -14,5 +14,5 @@ FINANCIAL_YEARS = {
 
 # Need iterable of tuples as choices.
 
-FINANCIAL_YEARS_CHOICES = [(k, v) for k, v in
-                           FINANCIAL_YEARS.items()]
+FINANCIAL_YEARS_CHOICES = sorted([(k, k) for k, v in
+                                  FINANCIAL_YEARS.items()])

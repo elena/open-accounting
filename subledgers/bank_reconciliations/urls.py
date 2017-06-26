@@ -19,6 +19,13 @@ urls = [
         name='bank-reconciliation'
         ),
 
+    # Reconcile listview
+    url(r'^table/$',
+        views.BankTransactionListView.as_view(),
+        name='bank-transaction-listview'
+        ),
+
+
     # Statement upload
     url(r'^statements/$',
         views.add_statements,

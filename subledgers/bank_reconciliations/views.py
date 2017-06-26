@@ -70,9 +70,13 @@ def bank_reconciliation(request, account):
     return render(request, template_name, context_data)
 
 
+class BankTransactionListView(generic.list.ListView):
+
+    model = BankTransaction
+    template_name = 'subledgers/bank_reconciliations/banktransaction_table.html'  # noqa
+
+
 class BankAccountListView(generic.list.ListView):
 
     model = BankAccount
     template_name = 'subledgers/bank_reconciliations/bankaccount_list.html'
-
-

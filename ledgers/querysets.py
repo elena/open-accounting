@@ -33,7 +33,9 @@ class AccountQuerySet(models.query.QuerySet):
             approx_date.earliest_date,
             approx_date.latest_date))
 
-    def fyear(self, fyear=CurrentFinancialYear.objects.get()):
+    def fyear(self, fyear=None):
+        if not fyear:
+            fyear = CurrentFinancialYear.objects.get()
         return self.filter(lines__transaction__date__range=(
             settings.FINANCIAL_YEARS[fyear]))
 
@@ -54,6 +56,8 @@ class LineQuerySet(models.query.QuerySet):
             approx_date.earliest_date,
             approx_date.latest_date))
 
-    def fyear(self, fyear=CurrentFinancialYear.objects.get()):
+    def fyear(self, fyear=None):
+        if not fyear:
+            fyear = CurrentFinancialYear.objects.get()
         return self.filter(transaction__date__range=(
             settings.FINANCIAL_YEARS[fyear]))

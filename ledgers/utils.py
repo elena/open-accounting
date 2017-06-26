@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
 import re
-
+from dateutil.rrule import rrule, MONTHLY
 from decimal import Decimal
 from django.utils.module_loading import import_string
+
+from ledgers.periods import settings
+
+
+def get_months(fyear):
+    return [d.isoformat()[:7] for d in rrule(
+        MONTHLY, count=12,
+        dtstart=settings.FINANCIAL_YEARS[fyear][0])]
 
 
 def get_source(source):

@@ -10,16 +10,16 @@ def generate_code(code=None, length=6):
     return code.upper()[:length]
 
 
-def generate_unique_code(queryset,
-                         code=None,
-                         code_field='code', # field code is kept in
-                         length=6, # same as field length
-                         iteration=0):
+def generate_unique_code(
+        queryset, code=None,
+        code_field='code',  # field code is kept in
+        length=6,  # same as field length
+        iteration=0):
 
     code = code.upper()[:length]
 
     if iteration > 0:
-        code = '{0}{1}'.format(code[:length-1], iteration)
+        code = '{0}{1}'.format(code[:length - 1], iteration)
 
     try:
         queryset.get(**{code_field: code})

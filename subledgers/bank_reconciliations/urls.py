@@ -12,9 +12,10 @@ urls = [
         name='bank-reconciliation-index'
         ),
 
+
+
     # Reconcile listview
     url(r'^(?P<account>[0-9\-]+)/$',
-        # views.BankReconciliationView.as_view(),
         views.bank_reconciliation,
         name='bank-reconciliation'
         ),

@@ -7,7 +7,7 @@ from django.db import models
 class QuerySet(models.query.QuerySet):
 
     def reconciled(self):
-        return self.exclude(transaction__id=None)
+        return self.filter(bankentry__id__gt=0)
 
     def unreconciled(self):
-        return self.filter(transaction__id=None)
+        return self.exclude(bankentry__id__gt=0)

@@ -93,12 +93,12 @@ class TestModelEntryCreateObjectFailure(TestCase):
     def test_create_object_single_rubbish_list_failure(self):
 
         test_kwargs_list = ['asfd']
-        self.assertRaises(Exception, Entry.create_objects, test_kwargs_list)
+        self.assertRaises(Exception, Entry.create_object, test_kwargs_list)
 
     def test_create_object_single_incomplete_kwarg_failure(self):
 
-        test_kwargs_list = [
-            {'relation': self.creditor0,
+        test_kwargs = {
+            'relation': self.creditor0,
              # 'object': 'CreditorInvoice', # no object failure
                              'date': dateparser.parse('02-Jun-2017'),
              'gst_total': utils.make_decimal('$0.65'),
@@ -113,8 +113,8 @@ class TestModelEntryCreateObjectFailure(TestCase):
                  (self.a2, utils.set_DR('6.5')),
                  (self.account_creditors, utils.set_CR('485.27')),  # noqa
                  (self.account_GST, utils.set_DR('0.65')),
-             ]}, ]
-        self.assertRaises(Exception, Entry.create_objects, test_kwargs_list)
+             ]}
+        self.assertRaises(Exception, Entry.create_object, test_kwargs)
 
 
 # These are the only tests that really matter.
@@ -148,9 +148,8 @@ class TestModelEntryCreateObjectCreditorInvoice(TestCase):
     def test_create_object_single_creditor_invoice_using_entity_passes(self):
 
         test_dump = "creditor\tdate\tinvoice_number\treference\tvalue\tgst_total\torder_number\t[15-0608]\t[15-0151]\t[15-0155]\t[15-0301]\t[15-0305]\r\nBIDVES\t02-Jun-2017\tI38731476\tO37696095\t$485.27\t$0.65\tguild house\t6.5\t478.12\t\t\t"  # NOQA
-        test_kwargs_list = Entry.dump_to_kwargs(
+        test_create_object = Entry.dump_to_objects(
             test_dump, user=self.user, object_name='CreditorInvoice')
-        test_create_object = Entry.create_objects(test_kwargs_list)
 
         # `.get(..` MUST BE BELOW `test_create_object`
         # get the objects that look exactly correct
@@ -183,12 +182,48 @@ class TestModelEntryCreateObjectCreditorInvoice(TestCase):
         self.assertEqual(set(list(test_result[0].transaction.lines.all())),
                          set(test_lines))
 
+    def test_create_object_single_creditor_invoice_passes(self):
+
+        test_dump = "creditor\tdate\tinvoice_number\treference\tvalue\tgst_total\torder_number\t[15-0608]\t[15-0151]\t[15-0155]\t[15-0301]\t[15-0305]\r\nBIDVES\t02-Jun-2017\tI38731476\tO37696095\t$485.27\t$0.65\tguild house\t6.5\t$1,478.12\t\t\t"  # NOQA
+        test_create_object = Entry.dump_to_objects(
+            test_dump, user=self.user, object_name='CreditorInvoice')
+
+        # `.get(..` MUST BE BELOW `test_create_object`
+        # get the objects that look exactly correct
+        test_transaction = Transaction.objects.get(
+            value=utils.make_decimal('$485.27'),
+            date=dateparser.parse('02-Jun-2017'),
+            source='subledgers.creditors.models.CreditorInvoice',
+            user=self.user)
+        test_lines = [Line.objects.get(transaction=test_transaction,
+                                       account=self.a1,
+                                       value=utils.set_DR('1478.12')),
+                      Line.objects.get(transaction=test_transaction,
+                                       account=self.a2,
+                                       value=utils.set_DR('6.5')),
+                      Line.objects.get(transaction=test_transaction,
+                                       account=self.account_creditors,
+                                       value=utils.set_CR('1485.27')),
+                      Line.objects.get(transaction=test_transaction,
+                                       account=self.account_GST,
+                                       value=utils.set_DR('0.65')), ]
+        test_result = [CreditorInvoice.objects.get(
+            transaction=test_transaction,
+            relation=self.creditor0,
+            gst_total=utils.make_decimal('$0.65'),
+            invoice_number='I38731476',
+            order_number='guild house',
+            reference='O37696095',)]
+
+        self.assertEqual(test_create_object, test_result)
+        self.assertEqual(set(list(test_result[0].transaction.lines.all())),
+                         set(test_lines))
+
     def test_create_object_single_creditor_invoice_using_creditor_invoice(self):  # noqa
 
         test_dump = "creditor\tdate\tinvoice_number\treference\tvalue\tgst_total\torder_number\t[15-0608]\t[15-0151]\t[15-0155]\t[15-0301]\t[15-0305]\r\nBIDVES\t02-Jun-2017\tI38731476\tO37696095\t$485.27\t$0.65\tguild house\t6.5\t478.12\t\t\t"  # NOQA
-        test_kwargs_list = CreditorInvoice.dump_to_kwargs(
+        test_create_object = CreditorInvoice.dump_to_objects(
             test_dump, user=self.user, object_name='CreditorInvoice')
-        test_create_object = CreditorInvoice.create_objects(test_kwargs_list)
 
         # `.get(..` MUST BE BELOW `test_create_object`
         # get the objects that look exactly correct
@@ -224,9 +259,8 @@ class TestModelEntryCreateObjectCreditorInvoice(TestCase):
     def test_create_object_double_creditor_invoice_using_creditor_invoice(self):  # noqa
 
         test_dump = "creditor\tdate\tinvoice_number\treference\tvalue\tgst_total\torder_number\t[15-0608]\t[15-0151]\t[15-0155]\t[15-0301]\t[15-0305]\r\nBIDVES\t02-Jun-2017\tI38731476\tO37696095\t$485.27\t$0.65\tguild house\t6.5\t478.12\t\t\t\r\nEFG456\t02-Jun-2017\tI38728128\tO37688231\t$217.86\t$0.29\tguild house\t2.92\t214.65\t\t\t"  # noqa
-        test_kwargs_list = CreditorInvoice.dump_to_kwargs(
+        test_create_object = CreditorInvoice.dump_to_objects(
             test_dump, user=self.user, object_name='CreditorInvoice')
-        test_create_object = CreditorInvoice.create_objects(test_kwargs_list)
 
         # `.get(..` MUST BE BELOW `test_create_object`
         # get the objects that look exactly correct

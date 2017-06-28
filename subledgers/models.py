@@ -40,14 +40,20 @@ class Entry(models.Model):
         abstract = True
 
     def __str__(self):
-        if self.relation:
+        try:
             return "{} [{}]-- ${} ".format(self.relation.entity.code,
                                            self.transaction.date,
                                            self.transaction.value)
-        else:
-            return "{} -- ${} -- {}".format(self.transaction.date,
-                                            self.transaction.value,
-                                            self.transaction.note)
+        except AttributeError:
+            if self.transaction.note:
+                return "{} -- ${} -- {}".format(self.transaction.date,
+                                                self.transaction.value,
+                                                self.transaction.note)
+            else:
+                return "{} -- ${}".format(self.transaction.date,
+                                          self.transaction.value)
+
+    # Entry specific utilities:
 
     def get_required(object_name):
         required = set([x for x in settings.FIELDS_TRANSACTION_REQUIRED]
@@ -56,6 +62,7 @@ class Entry(models.Model):
                           ['required_fields']])
         return required
 
+    # This is now redundant.
     def check_required(kwargs):
         required_fields = Entry.get_required(kwargs['object_name'])
         for key, value in kwargs.items():
@@ -93,22 +100,27 @@ class Entry(models.Model):
             pass
 
         # 3. source_str
-        if source in settings.VALID_SOURCES:
-            cls = import_string(source)
-            return cls
-        else:
+        try:
+            if source in settings.VALID_SOURCES:
+                cls = import_string(source)
+                return cls
+        except UnboundLocalError:
             raise Exception("No valid upload `type` {}.".format(name))
-
         raise Exception("No valid `type` found for {}.".format(name))
 
-    def dump_to_kwargs(dump, user, object_name=None, self=None):
-        """ Main function for bringing together the elements of constructing
-        the list of kwargs for transactions/invoices based upon whatever is
+    # Entry process specific utilities:
+
+    def dump_to_objects(dump, user, object_name=None, self=None, live=True):
+        """
+        ** End-to-End **
+
+        Main function for bringing together the elements of constructing
+        the list of kwargs for transactions / invoices based upon whatever is
         required for the object.
 
         Defining Object type by "object_name":
-         Either: batch of same Object Class (using *arg `object_name`)
-                 or: by calling method from Object Class (eg. CreditorInvoice)
+         Either: batch of same Object Class(using * arg `object_name`)
+                 or: by calling method from Object Class(eg. CreditorInvoice)
              or: column header `object_name` defining on a row-by-row basis.
 
          There is the choice of either preselecting what object_name of
@@ -119,12 +131,73 @@ class Entry(models.Model):
 
         `user` will be added here as the individual creating this list is
         the one who should be tied to the objects.
+        """
 
-        The processing here is:
+        # ** Part 1. convert dump to `list` of `dict` objects
+        table = utils.tsv_to_dict(dump)
 
-        1. convert .tsv_to_dict(dump)
+        obj_list = []
+        for row_dict in table:
 
-        for each line/row:
+            # flush lines list at the beginning of each loop
+            lines = []
+
+            # ** Part 2. Gettings `user` and `cls`
+            # copy kwargs to ensure valid set/uniform keys
+            kwargs = {k.lower(): v for k, v in row_dict.items()}
+
+            # figure out the `type` for this object
+            if kwargs.get('type'):
+                cls = Entry.get_cls(row_dict['type'])
+            elif object_name:
+                cls = Entry.get_cls(object_name)
+            elif self:
+                cls = Entry.get_cls(self)
+            else:
+                raise Exception(
+                    "No `type` column specified, unable to create objects.")
+
+            # will fail if no relation
+            relk = [rel for rel in row_dict
+                    if rel in settings.FIELD_IS_RELATION]
+            if relk and kwargs[relk[0]]:
+                entity_code = kwargs[relk[0]]
+                kwargs['relation'] = Relation.get_relation(
+                    entity_code, object_name)
+
+            # 4. find account fields, add lines
+            # 4a. find accounts, create line
+            # `if` is unnecessary but included for clarity
+            for key in row_dict:
+                if Account.get_account(key) and row_dict[key]:
+                    lines.append((Account.get_account(key),
+                                  utils.make_decimal(row_dict[key])))
+            kwargs['lines'] = lines
+
+            # ** Part 3. validate_object_kwargs
+            kwargs = Entry.validate_object_kwargs(kwargs, user, cls)
+
+            # ** Part 4. create_object
+            new_object = Entry.create_object(kwargs, live=live)
+
+            obj_list.append(new_object)
+
+        # Returns list of big dictionaries containing everything dumped in.
+        return obj_list
+
+    def make_dicts(kwargs):
+        trans_kwargs = {k: kwargs.get(k)
+                        for k in settings.FIELDS_TRANSACTION}
+
+        object_settings = settings.OBJECT_SETTINGS[kwargs['object_name']]
+        obj_kwargs = {k: kwargs.get(k)
+                      for k in object_settings['fields']}
+        return (trans_kwargs, obj_kwargs)
+
+    def validate_object_kwargs(kwargs, user, cls):
+        """ for each line/row:
+
+            1. allocate class
 
             2. add `source` using ledgers.utils.get_source(`Model`)
                             based upon `Model` provided in object settings
@@ -133,7 +206,6 @@ class Entry(models.Model):
 
             3. convert: IS_DATE using dateparser.parse
                         IS_MONEY using ledgers.utils.make_decimal()
-                        IS_ENTITY using .get_relation(key, object_name)
 
             4. create and add `lines` list of tuples:
                4a. find fields that are accounts using Account.get_account(key)
@@ -149,121 +221,65 @@ class Entry(models.Model):
            append `row_dict` set to `list_kwargs`
         """
 
-        # 1. convert
+        # 1. allocate class
+        kwargs['user'] = user
+        kwargs['cls'] = cls
+        kwargs['object_name'] = object_name = cls.__name__
+
+        # 2. add source
         object_settings = settings.OBJECT_SETTINGS[object_name]
-        list_kwargs = []
+        kwargs['source'] = utils.get_source(object_settings['source'])
 
-        for row_dict in utils.tsv_to_dict(dump):
+        required = {k: "" for k in Entry.get_required(object_name)}
+        for key in required:
 
-            # copy kwargs to make valid set
-            kwargs = {k.lower(): v for k, v in row_dict.items()}
+            # 3. typing
+            if key in settings.FIELD_IS_DATE:
+                kwargs[key] = utils.make_date(kwargs[key])
+            if key in settings.FIELD_IS_DECIMAL:
+                kwargs[key] = utils.make_decimal(kwargs[key])
 
-            # flush lines list at the beginning of each loop
-            lines = []
+        # 4b. and value and (conditionally) gst_total
+        lines = kwargs['lines']
+        if object_settings.get('tb_account'):
 
-            # 2. add user and source
-            kwargs['user'] = user
-            kwargs['source'] = utils.get_source(object_settings['source'])
+            # CR/Liability
+            if object_settings.get('is_CR_in_tb'):
+                lines.append((
+                    object_settings['tb_account'],
+                    utils.set_CR(kwargs['value'])))
 
-            if row_dict.get('type'):
-                cls = Entry.get_cls(row_dict['type'])
-            elif object_name:
-                cls = Entry.get_cls(object_name)
-            elif self:
-                cls = Entry.get_cls(self)
-            else:
-                raise Exception(
-                    "No `type` column specified, unable to create objects.")
+            # DR/Asset
+            if object_settings.get('is_DR_in_tb'):
+                lines.append((
+                    object_settings['tb_account'],
+                    utils.set_DR(kwargs['value'])))
 
-            kwargs['cls'] = cls
-            kwargs['object_name'] = object_name = cls.__name__
-
-            for key in row_dict:
-
-                # 3. typing
-                if key in settings.FIELD_IS_DATE:
-                    kwargs[key] = dateparser.parse(row_dict[key])
-                if key in settings.FIELD_IS_DECIMAL:
-                    kwargs[key] = utils.make_decimal(row_dict[key])
-                if key in settings.FIELD_IS_RELATION:
-                    entity_code = row_dict[key]
-                    kwargs['relation'] = Relation.get_relation(
-                        entity_code, object_name)
-
-                if object_name is None:
-                    try:
-                        kwargs['object_name'] = row_dict['object_name']
-                    except KeyError:
-                        raise Exception(
-                            "'object_name' column must be defined.")
-
-                # 4. find account fields, add lines
-                try:
-                    # 4a. find accounts, create line
-                    # `if` is unnecessary but included for clarity
-                    if Account.get_account(key):
-                        lines.append((Account.get_account(key),
-                                      utils.make_decimal(row_dict[key])))
-                except:
-                    pass
-
-            # 4b. and value and (conditionally) gst_total
-            if object_settings['tb_account']:
-
-                # @@ TODO write tests for correct DR/CR
-
-                # CR/Liability
+            # @@ TODO facilitate other taxes and surcharges.
+            if object_settings.get('is_GST'):
                 if object_settings.get('is_CR_in_tb'):
                     lines.append((
-                        object_settings['tb_account'],
-                        utils.set_CR(row_dict['value'])))
+                        settings.GST_DR_ACCOUNT,
+                        utils.set_DR(kwargs['gst_total'])))
 
-                    # @@ TODO facilitate other taxes and surcharges.
-                    if object_settings['is_GST']:
-                        lines.append((
-                            settings.GST_DR_ACCOUNT,
-                            utils.set_DR(row_dict['gst_total'])))
-
-                # DR/Asset
+            if object_settings.get('is_GST'):
                 if object_settings.get('is_DR_in_tb'):
                     lines.append((
-                        object_settings['tb_account'],
-                        utils.set_DR(row_dict['value'])))
+                        settings.GST_CR_ACCOUNT,
+                        utils.set_CR(kwargs['gst_total'])))
 
-                    if object_settings['is_GST']:
-                        lines.append((
-                            settings.GST_CR_ACCOUNT,
-                            utils.set_CR(row_dict['gst_total'])))
+            # @@ TODO make a decision about adding Invoice due_date
 
-                # @@ TODO make a decision about adding Invoice due_date
+        # 4c.
+        kwargs['lines'] = lines
 
-            # 4c.
-            kwargs['lines'] = lines
+        # 5 powerful check, will explode if not quite precisely correct
+        Entry.check_required(kwargs)
 
-            # 5. append constructed kwargs to list
+        return kwargs
 
-            # 6. check and add
-            # powerful check, will explode if not quite precisely correct
-            Entry.check_required(kwargs)
-
-            list_kwargs.append(kwargs)
-
-        # Returns list of big dictionaries containing everything dumped in.
-        # This big dictionary needs to be
-        return list_kwargs
-
-    def make_transaction_dict_pair(kwargs):
-        transaction_kwargs = {k: kwargs.get(k)
-                              for k in settings.FIELDS_TRANSACTION}
-
-        object_settings = settings.OBJECT_SETTINGS[kwargs['object_name']]
-        object_kwargs = {k: kwargs.get(k)
-                         for k in object_settings['fields']}
-        return (transaction_kwargs, object_kwargs)
-
-    def create_objects(list_kwargs, live=True):
-        """ Input: :obj:`list` of :obj:`dict`.
-
+    def create_object(kwargs, live=True):
+        """
         Each :obj:`dict` represents the necessary **kwargs to create an object.
 
         Can be generated from a spreadsheet dump using `self.dump_to_kwargs`
@@ -282,28 +298,18 @@ class Entry(models.Model):
                 or: kwarg key `object_name` defined on a row-by-row basis.
 
         """
+        cls = kwargs['cls']
+        trans_kwargs, obj_kwargs = Entry.make_dicts(kwargs)  # noqa
 
-        new_objects = []
-
-        for kwargs in list_kwargs:
-
-            cls = kwargs['cls']
-
-            transaction_kwargs, object_kwargs = Entry.make_transaction_dict_pair(  # noqa
-                kwargs)
-
-            new_object = cls(**object_kwargs)
-
-            if live:
-                new_transaction = Transaction(**transaction_kwargs)
-                new_transaction.save(lines=kwargs['lines'])
-                new_object.transaction = new_transaction
-                new_object.save()
-                new_objects.append(new_object)
-
-        results = new_objects
-
-        return results
+        if live:
+            try:
+                new_trans = Transaction(**trans_kwargs)
+                new_trans.save(lines=kwargs['lines'])
+                new_obj = cls(transaction_id=new_trans.pk, **obj_kwargs)
+                new_obj.save()
+                return new_obj
+            except Exception as e:
+                return "Error {}: {}".format(e, ", ".join(kwargs))
 
 
 class Invoice(Entry):

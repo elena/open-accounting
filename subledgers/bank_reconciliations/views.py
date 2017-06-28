@@ -1,26 +1,26 @@
 # -*- coding: utf-8 -*-
-# from django.core.urlresolvers import reverse, reverse_lazy
-# from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
 from django.views import generic
 
+# from rest_framework import permissions
 from rest_framework import viewsets
 
-from ledgers.utils import get_source, make_date
-from .models import BankTransaction
-from .serializers import BankTransactionSerializer
-
-class BankTransactionViewSet(viewsets.ModelViewSet):
-    queryset = BankTransaction.objects.all()
-    serializer_class = BankTransactionSerializer
-
-
 from ledgers.models import Account, Transaction
-from ledgers.utils import get_source
+from ledgers.utils import get_source, make_date
 from ledgers.bank_accounts.models import BankAccount
 
 from .forms import StatementUploadForm, BankReconciliationForm
 from .models import BankTransaction
+from .serializers import BankTransactionSerializer
+from .utils import import_bank_statement
+
+
+class BankTransactionViewSet(viewsets.ModelViewSet):
+    queryset = BankTransaction.objects.all()
+    serializer_class = BankTransactionSerializer
+    # permission_classes = [permissions.IsAdminUser]
+
+
 def add_statements(request):
     """ Upload statements view. """
 

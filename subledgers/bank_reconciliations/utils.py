@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
-import dateparser
-from datetime import timedelta
 from decimal import Decimal
-from django.db.models import Sum
 
 from .models import BankTransaction
 from ledgers.utils import make_date

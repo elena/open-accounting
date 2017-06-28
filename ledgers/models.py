@@ -193,7 +193,7 @@ class Transaction(models.Model):
     is_balanced = models.BooleanField(default=False)
 
     def __str__(self):
-        return "[{}] ${:.2f} {}".format(self.pk, self.value, self.source)
+        return "[{}] ${:.2f} {}".format(self.pk, self.value, self.source.split(".")[-1])
 
     # Overwrite built-in Model methods
 

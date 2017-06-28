@@ -33,7 +33,7 @@ SALES_CLEARING_ACCOUNT = getattr(
 
 # `user` also, but considered separately
 
-OTHER_REQUIRED_FIELDS = ['object_name', 'cls', 'relation', 'lines']
+OTHER_REQUIRED_FIELDS = ['object_name', 'cls', 'lines']
 # manually add 'lines' to Transacton.save(lines=lines)
 
 FIELDS_TRANSACTION_REQUIRED = ['date', 'value', 'user', 'source']
@@ -43,6 +43,10 @@ FIELDS_TRANSACTION = FIELDS_TRANSACTION_REQUIRED + ['note']
 FIELDS_ENTRY_REQUIRED = []
 
 FIELDS_ENTRY = FIELDS_ENTRY_REQUIRED + ['additional', 'relation']
+
+FIELDS_BANK_ENTRY_REQUIRED = ['bank_transaction_id']
+
+FIELDS_BANK_ENTRY = FIELDS_BANK_ENTRY_REQUIRED + ['additional']
 
 FIELDS_PAYMENT_REQUIRED = ['relation', 'bank_transaction_id']
 
@@ -65,47 +69,32 @@ Correctly defining CR/DR in subledgers is one of the most important aspects
 of the system therefore being as clear and explicit as possible.
 """
 OBJECT_SETTINGS = {
-    # 'JournalEntry': {
-    #     'source': JournalEntry,
-    #     'fields': FIELDS_TRANSACTION,
-    #     'required_fields': FIELDS_TRANSACTION_REQUIRED,
-    # },
-    'BankTransaction': {
-        'source': 'subledgers.bank_reconciliations.models.BankTransaction',
-        'tb_account': DEFAULT_BANK_ACCOUNT,
+    'JournalEntry': {
+        'source': 'subledgers.journals.models.JournalEntry',
+        'fields': FIELDS_ENTRY,
+        'required_fields': FIELDS_ENTRY_REQUIRED,
+    },
+    'BankEntry': {
+        'source': 'subledgers.bank_reconciliations.models.BankEntry',
         'is_DR_in_tb': True,
-        'fields': FIELDS_TRANSACTION,
-        'required_fields': FIELDS_TRANSACTION_REQUIRED,
+        'fields': FIELDS_BANK_ENTRY,
+        'required_fields': FIELDS_BANK_ENTRY_REQUIRED,
     },
 
-    # 'Sale': {
-    #     'source': Sale,
-    #     'tb_account': SALES_CLEARING_ACCOUNT,
-    #     'is_DR_in_tb': True,
-    #     'fields': FIELDS_TRANSACTION,
-    #     'required_fields': FIELDS_TRANSACTION_REQUIRED,
-    # },
-    # 'Expense': {
-    #     'source': Expense,
-    #     'tb_account': EXPENSE_CLEARING_ACCOUNT,
-    #     'is_CR_in_tb': True,
-    #     'fields': FIELDS_TRANSACTION,
-    #     'required_fields': FIELDS_TRANSACTION_REQUIRED,
-    # },
-    # 'Sale': {
-    #     'source': Sale,
-    #     'tb_account': SALES_CLEARING_ACCOUNT,
-    #     'is_DR_in_tb': True,
-    #     'fields': FIELDS_TRANSACTION,
-    #     'required_fields': FIELDS_TRANSACTION_REQUIRED,
-    # },
-    # 'Expense': {
-    #     'source': Expense,
-    #     'tb_account': EXPENSE_CLEARING_ACCOUNT,
-    #     'is_CR_in_tb': True,
-    #     'fields': FIELDS_TRANSACTION,
-    #     'required_fields': FIELDS_TRANSACTION_REQUIRED,
-    # },
+    'Sale': {
+        'source': 'subledgers.sales.models.Sale',
+        'tb_account': SALES_CLEARING_ACCOUNT,
+        'is_DR_in_tb': True,
+        'fields': FIELDS_ENTRY,
+        'required_fields': FIELDS_ENTRY_REQUIRED,
+    },
+    'Expense': {
+        'source': 'subledgers.expenses.models.Expense',
+        'tb_account': EXPENSE_CLEARING_ACCOUNT,
+        'is_CR_in_tb': True,
+        'fields': FIELDS_ENTRY,
+        'required_fields': FIELDS_ENTRY_REQUIRED,
+    },
 
     'CreditorInvoice': {
         'is_GST': True,
@@ -117,11 +106,10 @@ OBJECT_SETTINGS = {
         'required_fields': FIELDS_INVOICE_REQUIRED,
     },
     'CreditorPayment': {
-        # 'abstract': 'PAYMENT',
         'relation_class': 'subledgers.creditors.models.Creditor',
         'source': 'subledgers.creditors.models.CreditorPayment',
         'tb_account': ACCOUNTS_PAYABLE_ACCOUNT,
-        # 'is_CR_in_tb': @@ FIX THIS,
+        'is_DR_in_tb': True,
         'fields': FIELDS_PAYMENT,
         'required_fields': FIELDS_PAYMENT_REQUIRED,
     },

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import dateparser
-
 # from django.core.urlresolvers import reverse, reverse_lazy
 # from django.shortcuts import redirect, get_object_or_404
 from django.shortcuts import render
@@ -8,6 +6,7 @@ from django.views import generic
 
 from rest_framework import viewsets
 
+from ledgers.utils import get_source, make_date
 from .models import BankTransaction
 from .serializers import BankTransactionSerializer
 
@@ -58,7 +57,7 @@ def bank_reconciliation(request, account):
             lines = (account, line_account, value)
             kwargs = {
                 'user': request.user,
-                'date':  dateparser.parse(str(form.cleaned_data.get('date'))),
+                'date':  make_date(str(form.cleaned_data.get('date'))),
                 'source': get_source(BankTransaction)
             }
             new_transaction = Transaction(**kwargs)

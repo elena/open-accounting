@@ -5,6 +5,7 @@ from decimal import Decimal
 from django.db.models import Sum
 
 from .models import BankTransaction
+from ledgers.utils import make_date
 from ledgers.bank_accounts.models import BankAccount
 
 """ When importing statements we want to ensure that there are not
@@ -57,8 +58,7 @@ def preprocess_statement_CBA(data):
             continue
         kwargs = {}
         date, value, line_dump, balance = line.split('\t')
-        kwargs['date'] = dateparser.parse(
-            date, settings={'DATE_ORDER': 'DMY'}).date()
+        kwargs['date'] = make_date(date).date()
         kwargs['value'] = Decimal(value)
         kwargs['line_dump'] = line_dump
         kwargs['description'], kwargs['additional'] = process_line_dump(
@@ -78,8 +78,7 @@ def preprocess_statement_NAB(data):
         kwargs = {}
         date, value, nil, nil, additional, description, balance = line.split(
             '\t')
-        kwargs['date'] = dateparser.parse(
-            date, settings={'DATE_ORDER': 'DMY'}).date()
+        kwargs['date'] = make_date(date).date()
         kwargs['value'] = Decimal(value)
         kwargs['line_dump'] = "{} {}".format(description, additional)
         kwargs['description'] = description

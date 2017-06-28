@@ -9,7 +9,7 @@ from django.test import TestCase  # , Client
 
 from ledgers.models import Account, Transaction
 from ledgers.bank_accounts.models import BankAccount
-from .models import BankTransaction
+from .models import BankTransaction, BankEntry
 
 
 class TestBankTransactionQueryset(TestCase):
@@ -36,12 +36,14 @@ class TestBankTransactionQueryset(TestCase):
                               source="{}".format(BankAccount.__module__))
         self.t1.save(lines=lines)
 
-        self.b1 = BankTransaction(transaction=self.t1,
-                                  date=date(2017, 6, 16), value=t1_value,
+        self.b1 = BankTransaction(date=date(2017, 6, 16), value=t1_value,
                                   bank_account=self.ba,
                                   line_dump='Test Transaction 1',
                                   description='Test Transaction 1')
         self.b1.save()
+
+        self.e1 = BankEntry.objects.create(transaction=self.t1,
+                                           bank_transaction=self.b1)
 
         # banktransacion created only
         self.b2 = BankTransaction(date=date(2017, 6, 16), value=Decimal(20),

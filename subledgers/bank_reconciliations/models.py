@@ -1,7 +1,17 @@
 # -*- coding: utf-8 -*-
 from django.db import models
 
+from ..models import Entry
 from . import querysets
+
+
+class BankEntry(Entry):
+
+    bank_transaction = models.OneToOneField(
+        'bank_reconciliations.BankTransaction')
+
+    class Meta:
+        verbose_name_plural = "bank entries"
 
 
 class BankTransaction(models.Model):
@@ -17,10 +27,6 @@ class BankTransaction(models.Model):
 
     bank_account = models.ForeignKey('bank_accounts.BankAccount',
                                      related_name='banktransactions')
-
-    transaction = models.OneToOneField('ledgers.Transaction', null=True,
-                                       blank=True, default=None,
-                                       related_name='banktransactions')
 
     # ~~ fields from dump ~~
 
@@ -61,7 +67,6 @@ class BankTransaction(models.Model):
     def __str__(self):
         return "{:%d-%b-%Y} -- ${} -- {}".format(self.date, self.value,
                                                  self.description)
-
 
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #

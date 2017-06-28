@@ -348,15 +348,22 @@ class Invoice(Entry):
         abstract = True
 
 
-class Payment(Entry):
+class Payment(models.Model):
 
     # *** ABSTRACT CLASS ***
+    # *** NOT a Transaction  ***
 
-    """ Relation is compulsory, but probably best defined at concrete class.
+    """ Not related to `ledgers` at all.
+
+    Useful for queryset and reconciliation purposes.
+
+    Relation is compulsory, but probably best defined at concrete class to
+    be specific about subledger Relation, eg Creditor or Debtor.
     """
 
-    bank_transaction = models.ForeignKey(
-        'bank_reconciliations.BankTransaction')
+    bank_entry = models.OneToOneField(
+        'bank_reconciliations.BankEntry',
+        default="", blank=True, null=True)
 
     class Meta:
         abstract = True

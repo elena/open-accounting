@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
-from django.db import models
+from ..models import Entry
 
 
-class JournalEntry(models.Model):
+class JournalEntry(Entry):
 
-    transaction = models.OneToOneField('ledgers.Transaction')
-
-    def save(self, *args, **kwargs):
-        return super(JournalEntry, self).save(*args, **kwargs)
+    class Meta:
+        verbose_name_plural = "journal entries"

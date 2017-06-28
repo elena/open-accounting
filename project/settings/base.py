@@ -62,6 +62,10 @@ INSTALLED_APPS = [
     'subledgers',
     'subledgers.bank_reconciliations',
     'subledgers.creditors',
+    'subledgers.expenses',
+    'subledgers.journals',
+    'subledgers.sales',
+
 
     # Other local apps
     'entities',

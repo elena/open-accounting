@@ -16,6 +16,11 @@
 
   <div class="card-block">
 
+    {% if results %}
+      {% for result in results %}
+        {{ result }}<br>
+      {% endfor %}
+    {% endif %}
 
     <ul class="list-group-item-warning" style="list-style: none;">
 

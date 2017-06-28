@@ -69,6 +69,7 @@ INSTALLED_APPS = [
 
     # Other local apps
     'entities',
+    'reports',
 ]
 
 MIDDLEWARE = [

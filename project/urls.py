@@ -43,6 +43,11 @@ urlpatterns = [
         include('subledgers.bank_reconciliations.urls')),
 
 
+    # reports
+
+    url(r'^reports/',
+        include('reports.urls')),
+
     # external urls
 
     url(r'^api/', include(routers, namespace='api')),

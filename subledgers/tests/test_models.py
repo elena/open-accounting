@@ -335,7 +335,8 @@ class TestModelEntryCheckRequired(TestCase):
                       'user': 1,
                       'cls': CreditorInvoice,
                       'relation': 1,
-                      'object_name': 'BankTransaction',
+                      'bank_transaction_id': 1,
+                      'object_name': 'BankEntry',
                       'value': '$485.27'}
         self.assertTrue(Entry.check_required(test_input))
 
@@ -346,10 +347,11 @@ class TestModelEntryCheckRequired(TestCase):
                       '[15-0301]': '',
                       '[15-0305]': '',
                       '[15-0608]': '6.5',
-                      'object_name': 'BankTransaction',
+                      'object_name': 'BankEntry',
                       'lines': [1],
                       'user': 1,
                       'relation': 1,
+                      'bank_transaction_id': 1,
                       'cls': CreditorInvoice,
                       'date': '02-Jun-2017',
                       'value': '$485.27'}

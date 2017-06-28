@@ -21,13 +21,15 @@ from django.contrib import admin
 from django.views.generic import TemplateView
 
 from . import routers
-from subledgers.views import upload_view
+from subledgers.views import upload_view, dump_view
 
 
 urlpatterns = [
 
     # trivial urls
     url(r'^$', TemplateView.as_view(template_name="index.html")),
+
+    url(r'dump/$', dump_view, name="dump-view"),
 
     # "The Upload"
     url(r'^upload/', upload_view, name="upload-view"),

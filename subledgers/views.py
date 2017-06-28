@@ -32,3 +32,19 @@ def upload_view(request, import_function=None):
 
     context_data['form'] = form
     return render(request, template_name, context_data)
+
+
+def dump_view(request):
+
+    template_name = 'dump.html'
+    context_data = {}
+
+    form = BasicForm()
+    context_data['form'] = form
+
+    if request.method == 'POST':
+        # from ledgers.utils import dump_to_kwargs
+        context_data['results'] = request.POST['input_data']
+        return render(request, template_name, context_data)
+
+    return render(request, template_name, context_data)

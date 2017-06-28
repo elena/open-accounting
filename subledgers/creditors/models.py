@@ -68,7 +68,3 @@ class CreditorPayment(SpecifyRelation, Payment):
     `Transaction` ledger for clearing ACP
     """
     pass
-
-
-
-

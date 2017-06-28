@@ -63,6 +63,13 @@ def set_DR(value):
     return make_decimal(value)
 
 
+def make_CRDR(value):
+    if value > 0:
+        return '{:,.2f} DR'.format(value)
+    else:
+        return '{:,.2f} CR'.format(-value)
+
+
 def tsv_to_dict(dump):
     """ Make a sensible k,v dict from imported tsv.
 

@@ -1,11 +1,48 @@
 # -*- coding: utf-8 -*-
 import unittest
+from datetime import datetime
 from decimal import Decimal
 
 from django.test import TestCase  # , Client
 
 from ledgers.models import Account
 from ledgers import utils
+
+
+class TestUtilsMakeDate(TestCase, unittest.TestCase):
+
+    def test_make_date_not_date_failure(self):
+        test_input = "asdf"
+        # @@ bit inconsistent .. could be better.
+        self.assertEqual(utils.make_date(test_input), None)
+
+    def test_make_date_iso8601_failure(self):
+        test_input = "2017-05-02"
+        self.assertRaises(Exception, utils.make_date, test_input)
+
+    def test_make_date_usa_failure(self):
+        test_input = "2017-02-05"
+        self.assertRaises(Exception, utils.make_date, test_input)
+
+    # # @@ TODO limit range to this era
+    # def test_make_date_close_invalid_failure(self):
+    #     test_input = "2017-May-50"
+    #     self.assertRaises(Exception, utils.make_date, test_input)
+
+    def test_make_date_normal_passes(self):
+        test_input = "2-May-2017"
+        test_result = datetime(2017, 5, 2, 0, 0)
+        self.assertEqual(utils.make_date(test_input), test_result)
+
+    def test_make_date_nearly_normal_passes(self):
+        test_input = "2017-May-2"
+        test_result = datetime(2017, 5, 2, 0, 0)
+        self.assertEqual(utils.make_date(test_input), test_result)
+
+    def test_make_date_nearly_normal2_passes(self):
+        test_input = "Thursday, 2nd May 2017"
+        test_result = datetime(2017, 5, 2, 0, 0)
+        self.assertEqual(utils.make_date(test_input), test_result)
 
 
 class TestUtilsGetSource(TestCase, unittest.TestCase):

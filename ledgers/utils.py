@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import dateparser
 from dateutil.rrule import rrule, MONTHLY
 from decimal import Decimal
 from django.utils.module_loading import import_string
@@ -29,6 +30,19 @@ def get_source(source):
 
 def get_source_name(source):
     return source.split(".").last()
+
+
+def make_date(value):
+    """ Open to serious integrity error because of USA v. ISO8601 date
+    variation, eg: 5-2-2017 v. 2-5-2017 (May or Feb?).
+
+    Firmly enforce non-ambiguous date by Month as word eg: 2-May-2017.
+    """
+    month_as_word = re.sub(r'[^a-zA-Z.]', '', value)
+    if not month_as_word:
+        raise Exception(
+            "Ambiguous date provided. Please provide month as word. eg: GOOD: 2-May-2017 BAD: 2017-02-05")  # noqa
+    return dateparser.parse(value)
 
 
 def make_decimal(value):

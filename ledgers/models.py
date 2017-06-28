@@ -109,9 +109,8 @@ class Account(models.Model):
         account = Account.objects.by_code(data)
         if account:
             return account
-        raise Exception(
-            "Account can't be found based upon that input: {}.".format(data))
         # @@TODO Could potentially raise a TypeError here
+        return False
 
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #

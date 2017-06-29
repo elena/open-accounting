@@ -11,6 +11,39 @@ from subledgers.models import Entry, Relation
 from subledgers.creditors.models import Creditor, CreditorInvoice
 
 
+class TestModelEntryGetCls(TestCase):
+
+    # Successes!
+
+    def test_get_cls_valid_model_CreditorInvoice_passes(self):
+        self.assertEqual(Entry.get_cls(CreditorInvoice), CreditorInvoice)
+
+    def test_get_cls_valid_model_str_passes(self):
+        self.assertEqual(Entry.get_cls('CreditorInvoice'), CreditorInvoice)
+
+    def test_get_cls_valid_model_source_passes(self):
+        source = utils.get_source(CreditorInvoice)
+        self.assertEqual(Entry.get_cls(source), CreditorInvoice)
+
+    # Failures!
+
+    def test_get_cls_not_valid_model_Account_failure(self):
+        self.assertRaises(Exception, Entry.get_cls, Account)
+
+    def test_get_cls_not_valid_model_Creditor_failure(self):
+        self.assertRaises(Exception, Entry.get_cls, Creditor)
+
+    def test_get_cls_valid_random_str_failure(self):
+        self.assertRaises(Exception, Entry.get_cls, 'asdf')
+
+    def test_get_cls_valid_model_str_failure(self):
+        self.assertRaises(Exception, Entry.get_cls, 'Creditor')
+
+    def test_get_cls_valid_model_source_failure(self):
+        source = utils.get_source(Creditor)
+        self.assertRaises(Exception, Entry.get_cls, source)
+
+
 class TestModelRelationGetRelation(TestCase):
 
     def setUp(self):

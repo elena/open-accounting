@@ -38,7 +38,7 @@ class AccountQuerySet(models.query.QuerySet):
 
     def fyear(self, fyear=None):
         if not fyear:
-            fyear = CurrentFinancialYear.objects.get()
+            fyear = CurrentFinancialYear.objects.get().current_financial_year
         return self.filter(lines__transaction__date__range=(
             settings.FINANCIAL_YEARS[fyear]))
 
@@ -61,6 +61,6 @@ class LineQuerySet(models.query.QuerySet):
 
     def fyear(self, fyear=None):
         if not fyear:
-            fyear = CurrentFinancialYear.objects.get()
+            fyear = CurrentFinancialYear.objects.get().current_financial_year
         return self.filter(transaction__date__range=(
             settings.FINANCIAL_YEARS[fyear]))

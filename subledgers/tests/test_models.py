@@ -214,14 +214,14 @@ class TestModelEntryCreateObjectCreditorInvoice(TestCase):
 
     def test_create_object_single_creditor_invoice_passes(self):
 
-        test_dump = "creditor\tdate\tinvoice_number\treference\tvalue\tgst_total\torder_number\t[15-0608]\t[15-0151]\t[15-0155]\t[15-0301]\t[15-0305]\r\nBIDVES\t02-Jun-2017\tI38731476\tO37696095\t$485.27\t$0.65\tguild house\t6.5\t$1,478.12\t\t\t"  # NOQA
+        test_dump = "creditor\tdate\tinvoice_number\treference\tvalue\tgst_total\torder_number\t[15-0608]\t[15-0151]\t[15-0155]\t[15-0301]\t[15-0305]\r\nBIDVES\t02-Jun-2017\tI38731476\tO37696095\t$1485.27\t$0.65\tguild house\t6.5\t$1,478.12\t\t\t"  # NOQA
         test_create_object = Entry.dump_to_objects(
             test_dump, user=self.user, object_name='CreditorInvoice')
 
         # `.get(..` MUST BE BELOW `test_create_object`
         # get the objects that look exactly correct
         test_transaction = Transaction.objects.get(
-            value=utils.make_decimal('$485.27'),
+            value=utils.make_decimal('$1485.27'),
             date=dateparser.parse('02-Jun-2017'),
             source='subledgers.creditors.models.CreditorInvoice',
             user=self.user)

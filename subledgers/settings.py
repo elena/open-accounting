@@ -22,10 +22,10 @@ DEFAULT_BANK_ACCOUNT = getattr(
 # BankAccount.objects.first().account.get_code())
 
 EXPENSE_CLEARING_ACCOUNT = getattr(
-    settings, 'EXPENSE_CLEARING_ACCOUNT', '01-0300')
+    settings, 'EXPENSE_CLEARING_ACCOUNT', '03-0430')
 
 SALES_CLEARING_ACCOUNT = getattr(
-    settings, 'SALES_CLEARNING_ACCOUNT', '01-0300')
+    settings, 'SALES_CLEARNING_ACCOUNT', '03-0410')
 
 
 # @@ TODO Could use whatever Django db|forms use to get required fields.

@@ -1,0 +1,56 @@
+{% extends "reports/ledgers/base.html" %}
+
+
+{% block title %}Trial Balance -  {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="/">Home</a></li>
+  <li class="breadcrumb-item active">Bank Reconciliations</li>
+</ol>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="card-block">
+
+  <table width="100%" border=1>
+    <tr>
+      <th></th>
+      {% for month in months_headers %}
+      <th width="7%" style="white-space: nowrap">
+        <center>
+          {{ month }}
+        </center>
+      </th>
+      {% endfor %}
+      <th>
+      </th>
+    </tr>
+
+    {% for row in accounts_set %}
+    <tr>
+
+      <td>
+        <a href="{% url 'reports:account-detailview' row.account.get_code %}" style="white-space: nowrap">
+          {{ row.account }}
+        </a>
+      </td>
+
+      {% for total in row.month %}
+      <td align="right"
+          class="list-group-item-{% if total %}{% if total|slice:"-2:" == 'DR' %}success{% else %}danger{% endif %}{% endif %}" style="white-space: nowrap">
+        {% if total %} {{ total }} {% endif %}
+      </td>
+      {% endfor %}
+
+
+    </tr>
+    {% endfor %}
+
+  </table>
+
+</div>
+
+{% endblock %}

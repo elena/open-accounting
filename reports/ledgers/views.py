@@ -2,7 +2,8 @@
 from django.views import generic
 
 from ledgers import utils
-from ledgers.models import Account
+from ledgers.models import Account, Transaction
+from ledgers.periods.models import CurrentFinancialYear
 
 
 class AccountSet(object):
@@ -44,4 +45,22 @@ class TrialBalanceView(AccountSet, generic.list.ListView):
         context['accounts_set'] = accounts_set
         context['months_set'] = months_set
         context['months_headers'] = utils.get_months(fyear)
+        return context
+
+
+class AccountDetailView(generic.detail.DetailView):
+
+    model = Account
+    template_name = 'reports/ledgers/account_detail.html'  # noqa
+
+    def get_object(self, *args, **kwargs):
+        return self.get_queryset().by_code(self.kwargs['account'])
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(AccountDetailView, self).get_context_data(
+            *args, **kwargs)
+
+        context['transaction_list'] = t = Transaction.objects.filter(
+            lines__account=self.get_object()).order_by('date')
+        print(t)
         return context

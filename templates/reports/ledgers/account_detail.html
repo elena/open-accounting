@@ -1,0 +1,59 @@
+{% extends "reports/ledgers/base.html" %}
+
+{% block title %}Account -  {{ block.super }}{% endblock %}
+
+{% block breadcrumbs %}
+<ol class="breadcrumb">
+  <li class="breadcrumb-item"><a href="/">Home</a></li>
+  <li class="breadcrumb-item"><a href="/reports/tb/">Trial Balance</a></li>
+</ol>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="card-block">
+
+  <table border=0>
+
+    {% for obj in transaction_list %}
+    <tr>
+      <th style="white-space: nowrap" width=5>
+          {{ obj.date }}
+      </th>
+      <th style="white-space: nowrap">
+        <a href="/admin/ledgers/transaction/{{ obj.pk }}/">{{ obj.source }}</a>
+      </th>
+      <th style="white-space: nowrap; text-align: right">
+         {{ obj.value }}
+      </th>
+    </tr>
+
+    {% for line in obj.lines.all %}
+    <tr>
+      <td>&nbsp;</td>
+
+      <td style="white-space: nowrap">{{ line.account }}</td>
+
+      <td align="right"
+          class="list-group-item-{% if line.value %}{% if line.value > 0 %}success{% else %}danger{% endif %}{% endif %}" style="white-space: nowrap">
+        {{ line.value }}
+      </td>
+    </tr>
+    {% endfor %}
+
+    {% if obj.note %}
+    <tr>
+      <td rowspan=3>
+          {{ obj.note }}
+      </td>
+    </tr>
+    {% endif %}
+
+    {% endfor %}
+
+  </table>
+
+</div>
+
+{% endblock %}

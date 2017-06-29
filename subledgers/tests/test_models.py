@@ -7,7 +7,7 @@ from entities.models import Entity
 from ledgers import utils
 from ledgers.models import Account, Transaction, Line
 from subledgers import settings
-from subledgers.models import Entry
+from subledgers.models import Entry, Relation
 from subledgers.creditors.models import Creditor, CreditorInvoice
 
 
@@ -17,51 +17,48 @@ class TestModelRelationGetRelation(TestCase):
         self.new_entity_code = "new"
         self.new_entity_name = "new entity"
 
-        self.entity0 = Entity.objects.create(name="abc")
-        self.entity1 = Entity.objects.create(name="abc123")
-        self.entity2 = Entity.objects.create(name="efg4")
+        self.code0 = "ABC"
+        self.code1 = "ABC123"
+        self.code2 = "EFG456"
 
-        self.creditor1 = Creditor.objects.create(
-            entity=self.entity1)
+        self.entity0 = Entity.objects.create(name=self.code0.lower())
+        self.entity1 = Entity.objects.create(name=self.code1.lower())
+        self.entity2 = Entity.objects.create(name=self.code2.lower())
+
+        self.creditor0 = Creditor.objects.create(entity=self.entity0)
+        self.creditor1 = Creditor.objects.create(entity=self.entity1)
+
+    # passes
+
+    def test_get_relation_valid_creditor_passes(self):
+        self.assertEqual(Creditor().get_relation(self.code1), self.creditor1)
+
+    def test_get_relation_valid_creditor_name_passes(self):
+        self.assertEqual(Relation.get_relation(
+            self.code1, relation_class="subledgers.creditors.models.Creditor"),
+            self.creditor1)
+
+    def test_get_relation_valid_entity_name_passes(self):
+        self.assertEqual(Relation.get_relation(
+            self.code1, relation_class="entities.models.Entity"),
+            self.entity1)
+
+    def test_get_specific_relation_valid_creditor_passes(self):
+        self.assertEqual(Relation.get_specific_relation(
+            self.code1, 'CreditorInvoice'), self.creditor1)
+
+    # failures
 
     def test_get_relation_failure(self):
         self.assertRaises(Exception, Creditor().get_relation, 'XFAIL')
 
     def test_get_relation_no_entity_failure(self):
         self.assertRaises(Exception, Creditor().get_relation, 'XFAIL',
-                          'CreditorInvoice')
+                          'subledgers.creditors.models.Creditor')
 
     def test_get_specific_relation_no_entity_failure(self):
         self.assertRaises(Exception, Creditor.get_specific_relation, 'XFAIL',
-                          'CreditorInvoice')  # note: no `self`/Creditor()
-
-    def test_get_or_create_relation_and_entity_add_name_passes(self):
-        creditor0 = Creditor().get_or_create_relation_and_entity(
-            self.new_entity_code, name=self.new_entity_name)
-        self.assertEqual(Creditor().get_or_create_relation_and_entity(
-            self.new_entity_code, name=self.new_entity_name), creditor0)
-
-    def test_get_or_create_relation_and_entity_no_name_failure(self):
-        self.assertRaises(Exception,
-                          Creditor().get_or_create_relation_and_entity,
-                          self.new_entity_code)
-
-    def test_get_relation_valid_entity_passes(self):
-        creditor0 = Creditor.objects.create(entity=self.entity0)
-        self.assertEqual(Creditor().get_relation(
-            self.entity0.code), creditor0)
-
-    def test_get_relation_valid_creditor_passes(self):
-        self.assertEqual(Creditor().get_relation(
-            self.entity1.code), self.creditor1)
-
-    def test_get_relation_valid_entity_not_creditor_passes(self):
-        self.assertEqual(Creditor().get_relation(
-            self.entity1.code), self.creditor1)
-
-    def test_get_specific_relation_valid_creditor_passes(self):
-        self.assertEqual(Creditor.get_specific_relation(  # note: no `self`/Creditor() # noqa
-            self.entity1.code, 'CreditorInvoice'), self.creditor1)
+                          'subledgers.creditors.models.Creditor')  # note: no `self`/Creditor() # noqa
 
 
 class TestModelEntryCreateObjectFailure(TestCase):

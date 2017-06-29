@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import dateparser
 import re
 
 from django.db import models
@@ -162,7 +161,7 @@ class Entry(models.Model):
                     if rel in settings.FIELD_IS_RELATION]
             if relk and kwargs[relk[0]]:
                 entity_code = kwargs[relk[0]]
-                kwargs['relation'] = Relation.get_relation(
+                kwargs['relation'] = Relation.get_specific_relation(
                     entity_code, object_name)
 
             # 4. find account fields, add lines
@@ -363,7 +362,7 @@ class Payment(models.Model):
 
     bank_entry = models.OneToOneField(
         'bank_reconciliations.BankEntry',
-        default="", blank=True, null=True)
+        default='', blank=True, null=True)
 
     class Meta:
         abstract = True
@@ -380,7 +379,7 @@ class Relation(models.Model):
         abstract = True
 
     def clean_code(s):
-        return re.sub(r'\s', '', s)
+        return s[:6]
 
     def get_or_create_relation(code, _Relation):
         """ `Entity` exists. `Creditor`/`Debtor` associated object) may not.
@@ -388,43 +387,21 @@ class Relation(models.Model):
         We'll always want to just create related if `Entity` already exists.
         """
         try:
-            # try to get existing Creditor/Debtor (here as _Relation)
             return _Relation.objects.get(entity__code=code)
         except:
             try:
                 # entity exists but creditor does not.
                 # get entity, create creditor.
                 entity = Entity.objects.get(code=code)
+                if _Relation == Entity:
+                    return entity
                 return _Relation.objects.create(entity=entity)
             except Entity.DoesNotExist:
                 raise Exception(
                     "Entity not found with code: {}".format(code))
 
-    def get_or_create_relation_and_entity(self, code, name):
-        """ Creates both `Creditor` or `Debtor` and `Entity`.
-
-        name is required. Not sure when going to use this method.
-        """
-        code = self.clean_code(code)
-        _Relation = self._meta.model
-        try:
-            # try to get existing Creditor/Debtor (here as _Relation)
-            return _Relation.objects.get(entity__code=code)
-        except:
-            try:
-                # entity exists but creditor does not.
-                # get entity, create creditor.
-                entity = Entity.objects.get(code=code)
-                return _Relation.objects.create(entity=entity)
-            except:
-                if not name:
-                    raise Exception(
-                        "Does not exist. Name must be specified to create {}".format(code))  # noqa
-                else:
-                    entity = Entity.objects.create(code=code, name=name)
-                    return _Relation.objects.create(entity=entity)
-
-    def get_relation(code, object_name=None, self=None):
+    @classmethod
+    def get_relation(cls, code, relation_class=None):
         """ get the correct related Entity for *this* whatever,
         eg `Creditor`/`Debtor`.
 
@@ -432,12 +409,15 @@ class Relation(models.Model):
 
         Must be object instance eg. Creditor().get_relation("ACME")
         """
-        if object_name:
-            return Relation.get_specific_relation(code, object_name)
-        else:
-            _Relation = self._meta.model
-            return _Relation.get_or_create_relation(
-                Relation.clean_code(code), _Relation)
+
+        code = Relation.clean_code(code)
+
+        if relation_class:
+            rel_cls = utils.get_source(relation_class)
+        elif cls:
+            rel_cls = utils.get_source(cls)
+
+        return Relation.get_or_create_relation(code, import_string(rel_cls))
 
     def get_specific_relation(code, object_name):
         """ Specify the 'object_name' of the this you want the Relation of

@@ -70,11 +70,13 @@ of the system therefore being as clear and explicit as possible.
 """
 OBJECT_SETTINGS = {
     'JournalEntry': {
+        'relation_class': 'entities.models.Entity',
         'source': 'subledgers.journals.models.JournalEntry',
         'fields': FIELDS_ENTRY,
         'required_fields': FIELDS_ENTRY_REQUIRED,
     },
     'BankEntry': {
+        'relation_class': False,
         'source': 'subledgers.bank_reconciliations.models.BankEntry',
         'is_DR_in_tb': True,
         'fields': FIELDS_BANK_ENTRY,
@@ -89,6 +91,7 @@ OBJECT_SETTINGS = {
         'required_fields': FIELDS_ENTRY_REQUIRED,
     },
     'Expense': {
+        'relation_class': 'entities.models.Entity',
         'source': 'subledgers.expenses.models.Expense',
         'tb_account': EXPENSE_CLEARING_ACCOUNT,
         'is_CR_in_tb': True,

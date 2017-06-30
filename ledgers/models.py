@@ -191,6 +191,9 @@ class Transaction(models.Model):
     # sum out to zero. This is fundamental.
     is_balanced = models.BooleanField(default=False)
 
+    class Meta:
+        ordering = ['date']
+
     def __str__(self):
         return "[{}] ${:.2f} {}".format(self.pk, self.value, self.source.split(".")[-1])
 

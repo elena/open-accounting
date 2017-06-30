@@ -1,20 +1,45 @@
-# Admin Accounting
+# Open Accounting
+with Subledgers
 
+Version: 0.0.1a
 Current Django version: 1.11.2
 Author: Elena Williams
-
-** VERY OPINIONATED **
 
 For quick-start accounting for people who have been forced to do a lot of it,
 and are accustomed to getting the crappy end.
 
-Intended as an app that just works, aiming to reduce busy-work and duplication.
-If you want to use it as a reusable, go at it, intentionally starting from the
-other way around rather than going through the dependency hell of retrofitting
-a project for something whose most common use-case will be stand-alone.
+Intended as an app that reduces busy-work and duplication.
+
+Primary goals are to:
+ - #1 Remove "Pain Points" from the Accounting and Bookkeeping process
+ - #2 Speed (loading speed, report viewing speed, see #1)
+ - #3 Efficiency
 
 
----
+==========
+Fri Jun 30 14:39:31 AEST 2017
+v 0.0.1a
 
 
-The reason for all the inheretance is to ensure that the fields used are similar.
+Full write up here: http://open-accounting.blogspot.com.au/
+
+This first version is ** VERY OPINIONATED **.
+
+Biggest bits of opinionation is use of GST as required for Australian SAAP and
+Australian forms of bank accounts.
+
+This version allows
+
+ - General Ledgers
+ - Basic Contacts (as entities)
+
+ - Subledgers:
+   - Accounts Payable
+   - Expenses
+   - Bank Statements/reconciliations
+
+The biggest feature is bulk uploads from spreadsheet for:
+- bank statements
+- subledgers
+
+Number of tests: 125

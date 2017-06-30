@@ -256,11 +256,11 @@ class Entry(models.Model):
             if not gst_allocated:
                 if object_settings.get('is_DR_in_tb'):
                     lines.append((
-                        settings.GST_CR_ACCOUNT,
+                        settings.GST_DR_ACCOUNT,
                         utils.set_CR(kwargs['gst_total'])))
                 if object_settings.get('is_CR_in_tb'):
                     lines.append((
-                        settings.GST_DR_ACCOUNT,
+                        settings.GST_CR_ACCOUNT,
                         utils.set_DR(kwargs['gst_total'])))
 
         if object_settings.get('tb_account'):

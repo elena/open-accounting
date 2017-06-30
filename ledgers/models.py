@@ -253,6 +253,22 @@ new_transaction.save(lines)
         return False
         # raise Exception('Transaction does not balance.')
 
+    def bal_lines(data):
+        # @@ TODO break out balance in to own method/function
+        bal, lines = 0, [0, []]
+        for line in data:
+            kwargs = {}
+            if len(line) >= 2:
+                kwargs['account'] = Account.get_account(line[0])
+                kwargs['value'] = value = decimal.Decimal(line[1])
+                if len(line) > 2:
+                    kwargs['note'] = line[2]
+                bal += value
+            if value > 0:
+                lines[0] += value
+            lines[1].append(kwargs)
+        return bal, lines
+
     def line_validation(data):
         """ Returns a tuple as follows: (value, {**kwarg}, {**kwarg} {**kwarg})
         where `kwargs` are everything that's required to generate lines.
@@ -274,18 +290,7 @@ Input should be:
         # basically matter of converting list/tuple to list kwargs
         if (type(data) == list or type(data) == tuple) and len(data) >= 2 \
            and type(data[0]) == tuple:
-            bal, lines = 0, [0, []]
-            for line in data:
-                kwargs = {}
-                if len(line) >= 2:
-                    kwargs['account'] = Account.get_account(line[0])
-                    kwargs['value'] = value = decimal.Decimal(line[1])
-                    if len(line) > 2:
-                        kwargs['note'] = line[2]
-                    bal += value
-                if value > 0:
-                    lines[0] += value
-                lines[1].append(kwargs)
+            bal, lines = Transaction.bal_lines(data)
             if bal:
                 raise Exception(
                     "Lines do not balance. Total is {}".format(bal))

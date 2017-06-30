@@ -47,8 +47,7 @@ def dump_view(request):
     context_data['form'] = form
 
     if request.method == 'POST':
-        # from ledgers.utils import dump_to_kwargs
-        context_data['results'] = request.POST['input_data']
+        context_data['results'] = request.POST
         return render(request, template_name, context_data)
 
     return render(request, template_name, context_data)

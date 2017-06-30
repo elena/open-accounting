@@ -9,6 +9,7 @@ from ledgers.models import Account, Transaction, Line
 from subledgers import settings
 from subledgers.models import Entry, Relation
 from subledgers.creditors.models import Creditor, CreditorInvoice
+from subledgers.expenses.models import Expense
 
 
 class TestModelEntryGetCls(TestCase):
@@ -147,7 +148,67 @@ class TestModelEntryCreateObjectFailure(TestCase):
         self.assertRaises(Exception, Entry.create_object, test_kwargs)
 
 
+# These are the End-to-End tests (dump >> objects)
 # These are the only tests that really matter.
+
+
+class TestModelEntryCreateObjectExpense(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            'test_staff_user', 'test@example.com', '1234')
+        self.user.is_staff = True
+        self.user.save()
+
+        self.entity0 = Entity.objects.create(name="7Eleven")
+        self.creditor0 = Creditor.objects.create(
+            entity=self.entity0)
+        self.entity1 = Entity.objects.create(name="efg456")
+        self.creditor1 = Creditor.objects.create(
+            entity=self.entity1)
+
+        self.EXPENSE_CLEARING_ACCOUNT = Account.objects.create(
+            element='03', number='0430', name='Expense Clearing')
+        settings.GST_DR_ACCOUNT = Account.objects.create(
+            element='03', number='0733', name='GST account')
+        self.account_GST = settings.GST_DR_ACCOUNT
+        self.a1 = Account.objects.create(
+            element='15', number='0150', name='Test Account 1')
+        self.a2 = Account.objects.create(
+            element='15', number='0608', name='Test Account 2')
+
+    def test_create_object_single_expense_using_entity_passes(self):
+
+        test_dump = 'value\tdate\tnote\ttype\trelation\tgst_total\t[15-1420]\t[15-0715]\t[15-0605]\t[15-0150]\t[15-0500]\t[15-0650]\t[15-0705]\t[15-0710]\t[15-1010]\t[15-1400]\t[15-1430]\t[15-0620]\t[15-1470]\r\n53.47\t11-Dec-2015\t7-ELEVEN 2296 ERINDALE CENT\tExpense\t7ELEVE\t4.86\t\t\t\t48.61\t\t\t\t\t\t\t\t\t'  # noqa
+
+        test_create_object = Entry.dump_to_objects(
+            test_dump, user=self.user, object_name='Expense')
+
+        # `.get(..` MUST BE BELOW `test_create_object`
+        # get the objects that look exactly correct
+        test_transaction = Transaction.objects.get(
+            value=utils.make_decimal('53.47'),
+            date=dateparser.parse('11-Dec-2015'),
+            source='subledgers.expenses.models.Expense',
+            note='7-ELEVEN 2296 ERINDALE CENT',
+            user=self.user)
+        test_lines = [Line.objects.get(transaction=test_transaction,
+                                       account=self.a1,
+                                       value=utils.set_DR('48.61')),
+                      Line.objects.get(transaction=test_transaction,
+                                       account=self.EXPENSE_CLEARING_ACCOUNT,
+                                       value=utils.set_CR('53.47')),
+                      Line.objects.get(transaction=test_transaction,
+                                       account=self.account_GST,
+                                       value=utils.set_DR('4.86')), ]
+        test_result = [Expense.objects.get(
+            transaction=test_transaction,
+            relation=self.entity0,
+        )]
+
+        self.assertEqual(test_create_object, test_result)
+        self.assertEqual(set(list(test_result[0].transaction.lines.all())),
+                         set(test_lines))
 
 class TestModelEntryCreateObjectCreditorInvoice(TestCase):
 

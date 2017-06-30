@@ -266,7 +266,7 @@ class Entry(models.Model):
                 bal += line[1]
 
             if kwargs['value'] and\
-               not Decimal(kwargs['value']) == Decimal(bal):
+               not Decimal(kwargs['value']) == abs(Decimal(bal)):
                 raise Exception('Value provide ({}) does not equal remaining balance: {}'.format(kwargs['value'], bal))  # noqa
 
             # CR/Liability

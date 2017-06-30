@@ -158,10 +158,13 @@ class Entry(models.Model):
             # will fail if no relation
             relk = [rel for rel in row_dict
                     if rel in settings.FIELD_IS_RELATION]
-            if relk and kwargs[relk[0]]:
-                entity_code = kwargs[relk[0]]
-                kwargs['relation'] = Relation.get_relation_by_entry(
-                    entity_code, cls.__name__)
+            if relk:
+                if kwargs[relk[0]]:
+                    entity_code = kwargs[relk[0]]
+                    kwargs['relation'] = Relation.get_relation_by_entry(
+                        entity_code, cls.__name__)
+                else:
+                    kwargs.pop('relation')
 
             # 4. find account fields, add lines
             # 4a. find accounts, create line

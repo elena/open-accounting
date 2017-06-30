@@ -20,10 +20,14 @@ def upload_view(request, import_function=None):
         if request.POST.get('object_name'):
             data = Entry.dump_to_objects(
                 request.POST['input_data'],
-                request.user, request.POST['object_name'])
+                request.user, request.POST['object_name'],
+                live=request.POST['live'],
+            )
         else:
             data = Entry.dump_to_objects(
-                request.POST['input_data'], request.user)
+                request.POST['input_data'], request.user,
+                live=request.POST['live'],
+            )
         template_name = 'subledgers/upload_form.html'
         context_data['results'] = data
         return render(request, template_name, context_data)

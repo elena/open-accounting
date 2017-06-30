@@ -21,6 +21,7 @@ class UploadForm(forms.Form):
 
     object_name = forms.ChoiceField(widget=forms.RadioSelect,
                                     choices=OBJECT_CHOICES,)
+    live = forms.BooleanField()
 
     input_data = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 15, 'cols': 100}))

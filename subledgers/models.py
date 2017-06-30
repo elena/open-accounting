@@ -261,17 +261,25 @@ class Entry(models.Model):
 
         if object_settings.get('tb_account'):
 
+            bal = 0
+            for line in lines:
+                bal += line[1]
+
+            if kwargs['value'] and\
+               not Decimal(kwargs['value']) == Decimal(bal):
+                raise Exception('Value provide ({}) does not equal remaining balance: {}'.format(kwargs['value'], bal))  # noqa
+
             # CR/Liability
             if object_settings.get('is_CR_in_tb'):
                 lines.append((
                     object_settings['tb_account'],
-                    utils.set_CR(kwargs['value'])))
+                    utils.set_CR(bal)))
 
             # DR/Asset
             if object_settings.get('is_DR_in_tb'):
                 lines.append((
                     object_settings['tb_account'],
-                    utils.set_DR(kwargs['value'])))
+                    utils.set_DR(bal)))
 
             # @@ TODO make a decision about adding Invoice due_date
 

@@ -85,8 +85,8 @@ class TestModelRelationGetRelation(TestCase):
             self.code1, relation_class="entities.models.Entity"),
             self.entity1)
 
-    def test_get_specific_relation_valid_creditor_passes(self):
-        self.assertEqual(Relation.get_specific_relation(
+    def test_get_entry_relation_valid_creditor_passes(self):
+        self.assertEqual(Relation.get_relation_by_entry(
             self.code1, 'CreditorInvoice'), self.creditor1)
 
     # failures
@@ -98,8 +98,8 @@ class TestModelRelationGetRelation(TestCase):
         self.assertRaises(Exception, Creditor().get_relation, 'XFAIL',
                           'subledgers.creditors.models.Creditor')
 
-    def test_get_specific_relation_no_entity_failure(self):
-        self.assertRaises(Exception, Creditor.get_specific_relation, 'XFAIL',
+    def test_get_entry_relation_no_entity_failure(self):
+        self.assertRaises(Exception, Creditor.get_relation_by_entry, 'XFAIL',
                           'subledgers.creditors.models.Creditor')  # note: no `self`/Creditor() # noqa
 
 

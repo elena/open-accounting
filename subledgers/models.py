@@ -160,8 +160,8 @@ class Entry(models.Model):
                     if rel in settings.FIELD_IS_RELATION]
             if relk and kwargs[relk[0]]:
                 entity_code = kwargs[relk[0]]
-                kwargs['relation'] = Relation.get_specific_relation(
-                    entity_code, object_name)
+                kwargs['relation'] = Relation.get_relation_by_entry(
+                    entity_code, cls.__name__)
 
             # 4. find account fields, add lines
             # 4a. find accounts, create line
@@ -448,7 +448,7 @@ class Relation(models.Model):
 
         return Relation.get_or_create_relation(code, import_string(rel_cls))
 
-    def get_specific_relation(code, object_name):
+    def get_relation_by_entry(code, object_name):
         """ Specify the 'object_name' of the this you want the Relation of
         eg. object_name = 'CreditorInvoice', object_name = 'CreditorPayment'.
 

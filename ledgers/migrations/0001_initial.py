@@ -54,7 +54,7 @@ class Migration(migrations.Migration):
                 ('date', models.DateField()),
                 ('value', models.DecimalField(decimal_places=2, max_digits=19)),
                 ('note', models.CharField(blank=True, default='', max_length=2048, null=True)),
-                ('source', models.CharField(blank=True, default='', max_length=1024)),
+                ('source', models.CharField(max_length=1024)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
                 ('is_balanced', models.BooleanField(default=False)),

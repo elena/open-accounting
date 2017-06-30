@@ -175,7 +175,7 @@ class Transaction(models.Model):
     # reference = models.CharField(max_length=16)
 
     # @@TODO could be generic relation
-    source = models.CharField(max_length=1024, blank=True, default="")
+    source = models.CharField(max_length=1024)
 
     # ---
     # For our internal use/reference.

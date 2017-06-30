@@ -217,6 +217,52 @@ class TestModelEntryCreateObjectExpense(TestCase):
         self.assertEqual(set(list(test_result[0].transaction.lines.all())),
                          set(test_lines))
 
+class TestModelEntryCreateObjectTransactionDelete(TransactionTestCase):
+
+    """ This setUp is to test that superfluous `Transaction` objects are not
+    created if there is a validation problem with the `Entry`, as `Transaction`
+    must be created before `Entry`.
+
+    This is important for system integrity, until there is some generic
+    relation from `Transaction` that we can ensure exists.
+
+    # @@ TODO: This important integrity check needs to be done better.
+    """
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            'test_staff_user', 'test@example.com', '1234')
+        self.user.is_staff = True
+        self.user.save()
+
+    def test_create_object_failure_transaction_object_delete(self):  # noqa
+
+        # has blank entity, should fail to create CreditorInvoice
+        test_dump = "creditor\tdate\tinvoice_number\treference\tvalue\tgst_total\torder_number\t[15-0608]\t[15-0151]\t[15-0155]\t[15-0301]\t[15-0305]\r\n\t02-Jun-2017\tI38731476\tO37696095\t$485.27\t$0.65\tguild house\t6.5\t478.12\t\t\t"  # NOQA
+
+        self.assertRaises(Exception, Entry.dump_to_objects,
+                          test_dump, user=self.user,
+                          object_name='CreditorInvoice')
+
+        test_transaction_kwargs = {
+            'value': utils.make_decimal('$485.27'),
+            'date': dateparser.parse('02-Jun-2017'),
+            'source': 'subledgers.creditors.models.CreditorInvoice',
+            'user': self.user}
+
+        self.assertRaises(ObjectDoesNotExist, Transaction.objects.get,
+                          **test_transaction_kwargs)
+
+        # This test saved me one time, when Entry was finding a way to be
+        # created anyway, because wasn't validating `value` = bal.
+
+        test_transaction_kwargs = {
+            'source': 'subledgers.creditors.models.CreditorInvoice',
+            'user': self.user}
+
+        self.assertEqual(Transaction.objects.filter(
+            **test_transaction_kwargs).count(), 0)
+
 class TestModelEntryCreateObjectCreditorInvoice(TestCase):
 
     def setUp(self):

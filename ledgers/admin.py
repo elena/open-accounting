@@ -20,6 +20,9 @@ class TransactionAdmin(admin.ModelAdmin):
         TransactionLineInline,
     ]
 
+    def has_add_permission(self, request):
+        return False
+
 
 admin.site.register(Account, AccountAdmin)
 admin.site.register(Transaction, TransactionAdmin)

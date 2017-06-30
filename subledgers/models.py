@@ -30,7 +30,8 @@ class Entry(models.Model):
     For use with at least: Sales, Expenses
     """
 
-    transaction = models.OneToOneField('ledgers.Transaction')
+    transaction = models.OneToOneField('ledgers.Transaction',
+                                       blank=True, default="", null=True)
 
     additional = models.CharField(
         max_length=128, blank=True, default="", null=True)
@@ -309,12 +310,27 @@ class Entry(models.Model):
 
         if live:
             try:
+                new_obj = cls(**obj_kwargs)
                 new_trans = Transaction(**trans_kwargs)
                 new_trans.save(lines=kwargs['lines'])
-                new_obj = cls(transaction_id=new_trans.pk, **obj_kwargs)
+                new_obj.transaction = new_trans
                 new_obj.save()
                 return new_obj
             except Exception as e:
+                """ This line exists to ensure `Transaction` objects are not
+                created if there is a validation problem with the `Entry`, as
+                `Transaction` must be created before `Entry`.
+
+                This is important for system integrity, until there is some
+                generic relation from `Transaction` that we can ensure exists.
+
+                # @@ TODO: This important integrity check needs to be done
+                better.
+
+                This should nearly certainly be done as post_save signal
+                on Entry. taiga#122
+                """
+                new_trans.delete()
                 return "Error {}: {}".format(e, ", ".join(kwargs))
 
 

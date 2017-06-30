@@ -195,7 +195,8 @@ class Transaction(models.Model):
         ordering = ['date']
 
     def __str__(self):
-        return "[{}] ${:.2f} {}".format(self.pk, self.value, self.source.split(".")[-1])
+        return "[{}] ${:.2f} {}".format(self.pk, self.value,
+                                        self.source.split(".")[-1])
 
     # Overwrite built-in Model methods
 

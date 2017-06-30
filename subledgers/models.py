@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-import re
-
 from django.db import models
 from django.utils.module_loading import import_string
 from decimal import Decimal

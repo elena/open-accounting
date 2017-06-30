@@ -72,6 +72,13 @@ class TestModelRelationGetRelation(TestCase):
             self.code1, relation_class="subledgers.creditors.models.Creditor"),
             self.creditor1)
 
+    def test_get_relation_entity_exists_new_creditor_passes(self):
+        test_input = Relation.get_relation(
+            self.code2, relation_class="subledgers.creditors.models.Creditor")
+        # get newly created Creditor
+        test_result = Creditor.objects.get(entity=self.entity2)
+        self.assertEqual(test_input, test_result)
+
     def test_get_relation_valid_entity_name_passes(self):
         self.assertEqual(Relation.get_relation(
             self.code1, relation_class="entities.models.Entity"),

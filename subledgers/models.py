@@ -240,6 +240,26 @@ class Entry(models.Model):
 
         # 4b. and value and (conditionally) gst_total
         lines = kwargs['lines']
+
+        # @@ TODO facilitate other taxes and surcharges.
+        if object_settings.get('is_GST'):
+
+            gst_allocated = False
+            for line in lines:
+                if line[0].get_code() == settings.GST_DR_ACCOUNT\
+                   or line[0].get_code() == settings.GST_CR_ACCOUNT:
+                    gst_allocated = True
+
+            if not gst_allocated:
+                if object_settings.get('is_DR_in_tb'):
+                    lines.append((
+                        settings.GST_CR_ACCOUNT,
+                        utils.set_CR(kwargs['gst_total'])))
+                if object_settings.get('is_CR_in_tb'):
+                    lines.append((
+                        settings.GST_DR_ACCOUNT,
+                        utils.set_DR(kwargs['gst_total'])))
+
         if object_settings.get('tb_account'):
 
             # CR/Liability
@@ -253,19 +273,6 @@ class Entry(models.Model):
                 lines.append((
                     object_settings['tb_account'],
                     utils.set_DR(kwargs['value'])))
-
-            # @@ TODO facilitate other taxes and surcharges.
-            if object_settings.get('is_GST'):
-                if object_settings.get('is_CR_in_tb'):
-                    lines.append((
-                        settings.GST_DR_ACCOUNT,
-                        utils.set_DR(kwargs['gst_total'])))
-
-            if object_settings.get('is_GST'):
-                if object_settings.get('is_DR_in_tb'):
-                    lines.append((
-                        settings.GST_CR_ACCOUNT,
-                        utils.set_CR(kwargs['gst_total'])))
 
             # @@ TODO make a decision about adding Invoice due_date
 

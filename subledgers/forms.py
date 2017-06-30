@@ -10,6 +10,11 @@ OBJECT_CHOICES = sorted([(
     for x in OBJECT_SETTINGS]) \
     + [(None, "Mixed (must define `type` column)"), ]
 
+LIVE = [
+    (1, 'Live'),
+    (0, 'Not Live'),
+]
+
 
 class BasicForm(forms.Form):
 
@@ -21,7 +26,9 @@ class UploadForm(forms.Form):
 
     object_name = forms.ChoiceField(widget=forms.RadioSelect,
                                     choices=OBJECT_CHOICES,)
-    live = forms.BooleanField()
+
+    live = forms.ChoiceField(widget=forms.RadioSelect,
+                             choices=LIVE)
 
     input_data = forms.CharField(
         widget=forms.Textarea(attrs={'rows': 15, 'cols': 100}))

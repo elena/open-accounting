@@ -176,6 +176,7 @@ class Entry(models.Model):
             kwargs = Entry.validate_object_kwargs(kwargs, user, cls)
 
             # ** Part 4. create_object
+            # passing kwargs as dict not **kwargs
             new_object = Entry.create_object(kwargs, live=live)
 
             obj_list.append(new_object)
@@ -314,30 +315,30 @@ class Entry(models.Model):
         cls = kwargs['cls']
         trans_kwargs, obj_kwargs = Entry.make_dicts(kwargs)  # noqa
 
-        if live:
-            try:
-                new_obj = cls(**obj_kwargs)
-                new_trans = Transaction(**trans_kwargs)
+        try:
+            new_obj = cls(**obj_kwargs)
+            new_trans = Transaction(**trans_kwargs)
+            if live:
                 new_trans.save(lines=kwargs['lines'])
                 new_obj.transaction = new_trans
                 new_obj.save()
                 return new_obj
-            except Exception as e:
-                """ This line exists to ensure `Transaction` objects are not
-                created if there is a validation problem with the `Entry`, as
-                `Transaction` must be created before `Entry`.
+        except Exception as e:
+            """ This line exists to ensure `Transaction` objects are not
+            created if there is a validation problem with the `Entry`, as
+            `Transaction` must be created before `Entry`.
 
-                This is important for system integrity, until there is some
-                generic relation from `Transaction` that we can ensure exists.
+            This is important for system integrity, until there is some
+            generic relation from `Transaction` that we can ensure exists.
 
-                # @@ TODO: This important integrity check needs to be done
-                better.
+            # @@ TODO: This important integrity check needs to be done
+            better.
 
-                This should nearly certainly be done as post_save signal
-                on Entry. taiga#122
-                """
-                new_trans.delete()
-                return "Error {}: {}".format(e, ", ".join(kwargs))
+            This should nearly certainly be done as post_save signal
+            on Entry. taiga#122
+            """
+            new_trans.delete()
+            return "Error {}: {}".format(e, ", ".join(kwargs))
 
 
 class Invoice(Entry):

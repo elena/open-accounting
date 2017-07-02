@@ -12,6 +12,82 @@ from subledgers.models import Entry, Relation
 from subledgers.creditors.models import Creditor, CreditorInvoice
 from subledgers.expenses.models import Expense
 from subledgers.sales.models import Sale
+from subledgers.journals.models import JournalEntry
+
+
+class TestModelEntryCreateObjectJournal(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            'test_staff_user', 'test@example.com', '1234')
+        self.user.is_staff = True
+        self.user.save()
+
+        self.ac = Account.objects.create(
+            element='03', number='0450', name='Clearing - Payroll')
+        self.ap = Account.objects.create(
+            element='03', number='0709', name='PAYG Withholding')
+        self.ab = Account.objects.create(
+            element='15', number='1905', name='Bar')
+        self.af = Account.objects.create(
+            element='15', number='1903', name='FOH')
+        self.ag = Account.objects.create(
+            element='15', number='1910', name='Games')
+        self.ak = Account.objects.create(
+            element='15', number='1901', name='Kitchen')
+        self.ast = Account.objects.create(
+            element='15', number='1900', name='Staff')
+        self.asl = Account.objects.create(
+            element='03', number='0600', name='Superannuation Liability')
+        self.asu = Account.objects.create(
+            element='15', number='1950', name='Superannuation')
+
+    def test_create_object_single_journalentry_passes(self):
+
+        test_dump = 'value\tdate\ttype\t[03-0450]\t[03-0709]\t[15-1905]\t[15-1903]\t[15-1910]\t[15-1901]\t[15-1900]\t[03-0600]\t[15-1950]\r\n23,017.03\tJan. 31, 2016\tJournalEntry\t-17,817.96\t-3,447.00\t2,385.02\t6,991.98\t730.77\t8,255.34\t2,901.85\t-1,752.07\t1,752.07'  # noqa
+
+        test_create_object = Entry.dump_to_objects(
+            test_dump, user=self.user, object_name='JournalEntry')
+
+        test_transaction = Transaction.objects.get(
+            value=utils.make_decimal('23017.03'),
+            date=dateparser.parse('31-Jan-2016'),
+            source='subledgers.journals.models.JournalEntry',
+            user=self.user)
+        test_lines = [
+            Line.objects.get(transaction=test_transaction,
+                             account=self.ac,
+                             value=utils.make_decimal(-17817.96)),
+            Line.objects.get(transaction=test_transaction,
+                             account=self.ap,
+                             value=utils.make_decimal(-3447)),
+            Line.objects.get(transaction=test_transaction,
+                             account=self.ab,
+                             value=utils.make_decimal(2385.02)),
+            Line.objects.get(transaction=test_transaction,
+                             account=self.af,
+                             value=utils.make_decimal(6991.98)),
+            Line.objects.get(transaction=test_transaction,
+                             account=self.ag,
+                             value=utils.make_decimal(730.77)),
+            Line.objects.get(transaction=test_transaction,
+                             account=self.ak,
+                             value=utils.make_decimal(8255.34)),
+            Line.objects.get(transaction=test_transaction,
+                             account=self.ast,
+                             value=utils.make_decimal(2901.85)),
+            Line.objects.get(transaction=test_transaction,
+                             account=self.asl,
+                             value=utils.make_decimal(-1752.07)),
+            Line.objects.get(transaction=test_transaction,
+                             account=self.asu,
+                             value=utils.make_decimal(1752.07)),
+        ]
+        test_result = [JournalEntry.objects.get(transaction=test_transaction,)]
+
+        self.assertEqual(test_create_object, test_result)
+        self.assertEqual(set(list(test_result[0].transaction.lines.all())),
+                         set(test_lines))
 
 
 class TestModelEntryGetCls(TestCase):

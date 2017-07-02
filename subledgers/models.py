@@ -188,12 +188,12 @@ class Entry(models.Model):
         return obj_list
 
     def make_dicts(kwargs):
-        trans_kwargs = {k: kwargs.get(k)
-                        for k in settings.FIELDS_TRANSACTION}
+        trans_kwargs = {k: kwargs[k]
+                        for k in settings.FIELDS_TRANSACTION if kwargs.get(k)}
 
         object_settings = settings.OBJECT_SETTINGS[kwargs['object_name']]
-        obj_kwargs = {k: kwargs.get(k)
-                      for k in object_settings['fields']}
+        obj_kwargs = {k: kwargs[k]
+                      for k in object_settings['fields'] if kwargs.get(k)}
         return (trans_kwargs, obj_kwargs)
 
     def validate_object_kwargs(kwargs, user, cls):

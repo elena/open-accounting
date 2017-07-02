@@ -25,11 +25,19 @@
         </center>
       </th>
       {% endfor %}
-      <th>
+      <th width="7.5%">
       </th>
     </tr>
 
     {% for row in accounts_set %}
+    {% ifchanged row.account.element %}
+    <tr>
+      <td colspan=12>{{ row.account.get_element_display }}</td>
+      <td></td>
+      <td></td>
+    </tr>
+    {% endifchanged %}
+
     <tr>
 
       <td>

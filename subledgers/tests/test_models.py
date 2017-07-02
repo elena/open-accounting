@@ -11,6 +11,7 @@ from subledgers import settings
 from subledgers.models import Entry, Relation
 from subledgers.creditors.models import Creditor, CreditorInvoice
 from subledgers.expenses.models import Expense
+from subledgers.sales.models import Sale
 
 
 class TestModelEntryGetCls(TestCase):
@@ -120,10 +121,14 @@ class TestModelEntryCreateObjectFailure(TestCase):
 
         ACCOUNTS_PAYABLE_ACCOUNT = Account.objects.create(
             element='03', number='0300', name='ACP')
+        settings.GST_CR_ACCOUNT = Account.objects.create(
+            element='03', number='0733', name='GST account')
         settings.GST_DR_ACCOUNT = Account.objects.create(
-            element='13', number='0700', name='GST account')
+            element='03', number='0713', name='GST account')
+        self.account_CR_GST = settings.GST_CR_ACCOUNT
+        self.account_DR_GST = settings.GST_DR_ACCOUNT
         self.account_creditors = ACCOUNTS_PAYABLE_ACCOUNT
-        self.account_GST = settings.GST_DR_ACCOUNT
+        self.account_GST = settings.GST_CR_ACCOUNT
         self.a1 = Account.objects.create(
             element='15', number='0151', name='Test Account 1')
         self.a2 = Account.objects.create(
@@ -159,6 +164,91 @@ class TestModelEntryCreateObjectFailure(TestCase):
 # These are the End-to-End tests (dump >> objects)
 # These are the only tests that really matter.
 
+class TestModelEntryCreateObjectSale(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            'test_staff_user', 'test@example.com', '1234')
+        self.user.is_staff = True
+        self.user.save()
+
+        self.SALES_CLEARING_ACCOUNT = Account.objects.create(
+            element='03', number='0410', name='Sales Clearing')
+        settings.GST_CR_ACCOUNT = Account.objects.create(
+            element='03', number='0733', name='GST account')
+        settings.GST_DR_ACCOUNT = Account.objects.create(
+            element='03', number='0713', name='GST account')
+        self.account_CR_GST = settings.GST_CR_ACCOUNT
+        self.account_DR_GST = settings.GST_DR_ACCOUNT
+        self.a1 = Account.objects.create(
+            element='10', number='0100', name='Sales')
+
+    def test_create_object_single_sale_passes(self):
+
+        test_dump = 'value\tdate\ttype\tgst_total\t[10-0100]\r\n3054.6\tJan. 23, 2016\tSale\t277.69\t2776.91'  # noqa
+
+        test_create_object = Entry.dump_to_objects(
+            test_dump, user=self.user, object_name='Sale')
+
+        test_transaction = Transaction.objects.get(
+            value=utils.make_decimal('3054.6'),
+            date=dateparser.parse('23-Jan-2016'),
+            source='subledgers.sales.models.Sale',
+            user=self.user)
+        test_lines = [
+            Line.objects.get(transaction=test_transaction,
+                             account=self.SALES_CLEARING_ACCOUNT,
+                             value=utils.set_DR('3054.6')),
+            Line.objects.get(transaction=test_transaction,
+                             account=self.a1,
+                             value=utils.set_CR('2776.91')),
+            Line.objects.get(transaction=test_transaction,
+                             account=self.account_DR_GST,
+                             value=utils.set_CR('277.69')),
+        ]
+        test_result = [Sale.objects.get(transaction=test_transaction,)]
+
+        self.assertEqual(test_create_object, test_result)
+        self.assertEqual(set(list(test_result[0].transaction.lines.all())),
+                         set(test_lines))
+
+    def test_create_object_double_sale_passes(self):
+
+        test_dump = 'value\tdate\ttype\tgst_total\t[10-0100]\r\n3054.6\tJan. 23, 2016\tSale\t277.69\t2776.91\r\n3877.7\tJan. 24, 2016\tSale\t352.52\t3525.18'  # noqa
+
+        test_create_objects = Entry.dump_to_objects(
+            test_dump, user=self.user, object_name='Sale')
+
+        test_transaction1 = Transaction.objects.get(
+            value=utils.make_decimal('3054.6'),
+            date=dateparser.parse('23-Jan-2016'),
+            source='subledgers.sales.models.Sale',
+            user=self.user)
+        test_transaction2 = Transaction.objects.get(
+            value=utils.make_decimal('3877.7'),
+            date=dateparser.parse('24-Jan-2016'),
+            source='subledgers.sales.models.Sale',
+            user=self.user)
+        test_lines = [
+            Line.objects.get(transaction=test_transaction1,
+                             account=self.SALES_CLEARING_ACCOUNT,
+                             value=utils.set_DR('3054.6')),
+            Line.objects.get(transaction=test_transaction1,
+                             account=self.a1,
+                             value=utils.set_CR('2776.91')),
+            Line.objects.get(transaction=test_transaction1,
+                             account=self.account_DR_GST,
+                             value=utils.set_CR('277.69')),
+        ]
+        test_result = [
+            Sale.objects.get(transaction=test_transaction1),
+            Sale.objects.get(transaction=test_transaction2)
+        ]
+
+        self.assertEqual(test_create_objects, test_result)
+        self.assertEqual(set(list(test_result[0].transaction.lines.all())),
+                         set(test_lines))
+
 
 class TestModelEntryCreateObjectExpense(TestCase):
 
@@ -177,9 +267,13 @@ class TestModelEntryCreateObjectExpense(TestCase):
 
         self.EXPENSE_CLEARING_ACCOUNT = Account.objects.create(
             element='03', number='0430', name='Expense Clearing')
-        settings.GST_DR_ACCOUNT = Account.objects.create(
+        settings.GST_CR_ACCOUNT = Account.objects.create(
             element='03', number='0733', name='GST account')
-        self.account_GST = settings.GST_DR_ACCOUNT
+        settings.GST_DR_ACCOUNT = Account.objects.create(
+            element='03', number='0713', name='GST account')
+        self.account_CR_GST = settings.GST_CR_ACCOUNT
+        self.account_DR_GST = settings.GST_DR_ACCOUNT
+
         self.a1 = Account.objects.create(
             element='15', number='0150', name='Test Account 1')
         self.a2 = Account.objects.create(
@@ -207,7 +301,7 @@ class TestModelEntryCreateObjectExpense(TestCase):
                                        account=self.EXPENSE_CLEARING_ACCOUNT,
                                        value=utils.set_CR('53.47')),
                       Line.objects.get(transaction=test_transaction,
-                                       account=self.account_GST,
+                                       account=self.account_CR_GST,
                                        value=utils.set_DR('4.86')), ]
         test_result = [Expense.objects.get(
             transaction=test_transaction,
@@ -239,7 +333,7 @@ class TestModelEntryCreateObjectExpense(TestCase):
                                        account=self.EXPENSE_CLEARING_ACCOUNT,
                                        value=utils.set_CR('53.47')),
                       Line.objects.get(transaction=test_transaction,
-                                       account=self.account_GST,
+                                       account=self.account_CR_GST,
                                        value=utils.set_DR('4.86')), ]
         test_result = [Expense.objects.get(
             transaction=test_transaction,
@@ -271,7 +365,7 @@ class TestModelEntryCreateObjectExpense(TestCase):
                                        account=self.EXPENSE_CLEARING_ACCOUNT,
                                        value=utils.set_CR('53.47')),
                       Line.objects.get(transaction=test_transaction,
-                                       account=self.account_GST,
+                                       account=self.account_CR_GST,
                                        value=utils.set_DR('4.86')), ]
         test_result = [Expense.objects.get(
             transaction=test_transaction,
@@ -303,7 +397,7 @@ class TestModelEntryCreateObjectExpense(TestCase):
                                        account=self.EXPENSE_CLEARING_ACCOUNT,
                                        value=utils.set_DR('53.47')),
                       Line.objects.get(transaction=test_transaction,
-                                       account=self.account_GST,
+                                       account=self.account_CR_GST,
                                        value=utils.set_CR('4.86')), ]
         test_result = [Expense.objects.get(
             transaction=test_transaction,
@@ -378,10 +472,13 @@ class TestModelEntryCreateObjectCreditorInvoice(TestCase):
 
         ACCOUNTS_PAYABLE_ACCOUNT = Account.objects.create(
             element='03', number='0300', name='ACP')
+        settings.GST_CR_ACCOUNT = Account.objects.create(
+            element='03', number='0733', name='GST account')
         settings.GST_DR_ACCOUNT = Account.objects.create(
-            element='13', number='0700', name='GST account')
+            element='03', number='0713', name='GST account')
+        self.account_CR_GST = settings.GST_CR_ACCOUNT
+        self.account_DR_GST = settings.GST_DR_ACCOUNT
         self.account_creditors = ACCOUNTS_PAYABLE_ACCOUNT
-        self.account_GST = settings.GST_DR_ACCOUNT
         self.a1 = Account.objects.create(
             element='15', number='0151', name='Test Account 1')
         self.a2 = Account.objects.create(
@@ -410,7 +507,7 @@ class TestModelEntryCreateObjectCreditorInvoice(TestCase):
                                        account=self.account_creditors,
                                        value=utils.set_CR('485.27')),
                       Line.objects.get(transaction=test_transaction,
-                                       account=self.account_GST,
+                                       account=self.account_CR_GST,
                                        value=utils.set_DR('0.65')), ]
         test_result = [CreditorInvoice.objects.get(
             transaction=test_transaction,
@@ -447,7 +544,7 @@ class TestModelEntryCreateObjectCreditorInvoice(TestCase):
                                        account=self.account_creditors,
                                        value=utils.set_CR('1485.27')),
                       Line.objects.get(transaction=test_transaction,
-                                       account=self.account_GST,
+                                       account=self.account_CR_GST,
                                        value=utils.set_DR('0.65')), ]
         test_result = [CreditorInvoice.objects.get(
             transaction=test_transaction,
@@ -484,7 +581,7 @@ class TestModelEntryCreateObjectCreditorInvoice(TestCase):
                                        account=self.account_creditors,
                                        value=utils.set_CR('485.27')),
                       Line.objects.get(transaction=test_transaction,
-                                       account=self.account_GST,
+                                       account=self.account_CR_GST,
                                        value=utils.set_DR('0.65')), ]
         test_result = [CreditorInvoice.objects.get(
             transaction=test_transaction,
@@ -526,7 +623,7 @@ class TestModelEntryCreateObjectCreditorInvoice(TestCase):
                                         account=self.account_creditors,
                                         value=utils.set_CR('485.27')),
                        Line.objects.get(transaction=test_transaction0,
-                                        account=self.account_GST,
+                                        account=self.account_CR_GST,
                                         value=utils.set_DR('0.65')), ]
         test_lines1 = [Line.objects.get(transaction=test_transaction1,
                                         account=self.a1,
@@ -538,7 +635,7 @@ class TestModelEntryCreateObjectCreditorInvoice(TestCase):
                                         account=self.account_creditors,
                                         value=utils.set_CR('217.86')),
                        Line.objects.get(transaction=test_transaction1,
-                                        account=self.account_GST,
+                                        account=self.account_CR_GST,
                                         value=utils.set_DR('0.29')), ]
         test_result = [
             CreditorInvoice.objects.get(

@@ -249,24 +249,29 @@ class Entry(models.Model):
 
             gst_allocated = False
             for line in lines:
-                if line[0].get_code() == settings.GST_DR_ACCOUNT\
-                   or line[0].get_code() == settings.GST_CR_ACCOUNT:
+                if line[0] == settings.GST_DR_ACCOUNT\
+                   or line[0] == settings.GST_CR_ACCOUNT:
                     gst_allocated = True
 
             if not gst_allocated:
-                if object_settings.get('is_DR_in_tb'):
+                # note: correct GST account, abs value
+                # fix dr/cr +/- in next process, not here.
+                if object_settings.get('is_tb_account_DR'):
                     lines.append((
                         settings.GST_DR_ACCOUNT,
-                        utils.set_CR(kwargs['gst_total'])))
-                if object_settings.get('is_CR_in_tb'):
+                        utils.make_decimal(kwargs['gst_total'])))
+                if object_settings.get('is_tb_account_CR'):
                     lines.append((
                         settings.GST_CR_ACCOUNT,
-                        utils.set_DR(kwargs['gst_total'])))
+                        utils.make_decimal(kwargs['gst_total'])))
 
         if object_settings.get('tb_account'):
 
             bal = 0
-            for line in lines:
+            for i, line in enumerate(lines):
+                # Negate if DR:
+                if object_settings.get('is_tb_account_DR'):
+                    lines[i] = (line[0], -line[1])
                 bal += line[1]
 
             if kwargs['value'] and\
@@ -274,13 +279,13 @@ class Entry(models.Model):
                 raise Exception('Value provide ({}) does not equal remaining balance: {}'.format(kwargs['value'], bal))  # noqa
 
             # CR/Liability
-            if object_settings.get('is_CR_in_tb'):
+            if object_settings.get('is_tb_account_CR'):
                 lines.append((
                     object_settings['tb_account'],
                     utils.set_CR(bal)))
 
             # DR/Asset
-            if object_settings.get('is_DR_in_tb'):
+            if object_settings.get('is_tb_account_DR'):
                 lines.append((
                     object_settings['tb_account'],
                     utils.set_DR(bal)))

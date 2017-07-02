@@ -67,7 +67,7 @@ def make_CRDR(value):
     if value > 0:
         return '{:,.2f} DR'.format(value)
     else:
-        return '{:,.2f} CR'.format(-value)
+        return '-{:,.2f} CR'.format(-value)
 
 
 def tsv_to_dict(dump):

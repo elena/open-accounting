@@ -345,6 +345,8 @@ class Entry(models.Model):
             This should nearly certainly be done as post_save signal
             on Entry. taiga#122
             """
+            print("Error {}. Keys provided: {}".format(e, ", ".join(
+                obj_kwargs)))
             new_trans.delete()
             return "Error {}: {}".format(e, ", ".join(kwargs))
 

@@ -110,14 +110,6 @@ OBJECT_SETTINGS = {
         'fields': FIELDS_INVOICE,
         'required_fields': FIELDS_INVOICE_REQUIRED,
     },
-    'CreditorPayment': {
-        'relation_class': 'subledgers.creditors.models.Creditor',
-        'source': 'subledgers.creditors.models.CreditorPayment',
-        'tb_account': ACCOUNTS_PAYABLE_ACCOUNT,
-        'is_DR_in_tb': True,
-        'fields': FIELDS_PAYMENT,
-        'required_fields': FIELDS_PAYMENT_REQUIRED,
-    },
 
 
     # 'DebtorInvoice': {

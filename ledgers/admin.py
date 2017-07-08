@@ -15,6 +15,7 @@ class TransactionLineInline(admin.TabularInline):
 
 class TransactionAdmin(admin.ModelAdmin):
     model = Transaction
+    list_display = ['id', 'date', 'value', 'note', 'source']
     list_filter = ['source', 'date']
     inlines = [TransactionLineInline]
 

@@ -46,7 +46,7 @@ body.fixed-nav {
   z-index: 1; }
 
 .table td {
-  padding: .3rem;}
+  padding: 0 .2rem;}
 
 .nowrap {
   white-space: nowrap;}

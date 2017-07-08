@@ -66,6 +66,8 @@ def set_DR(value):
 def make_CRDR(value):
     if value > 0:
         return '{:,.2f} DR'.format(value)
+    elif value == 0:
+        return ''
     else:
         return '-{:,.2f} CR'.format(-value)
 

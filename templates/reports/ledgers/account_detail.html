@@ -42,12 +42,12 @@
     </tr>
     {% endfor %}
 
-    {% if obj.note %}
     <tr>
-      <td rowspan=3>
-          {{ obj.note }}
+      <td colspan=3>
+          {{ obj.note }}<br><br>
       </td>
     </tr>
+    {% if obj.note %}
     {% endif %}
 
     {% endfor %}

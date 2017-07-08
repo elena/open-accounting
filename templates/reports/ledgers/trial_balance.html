@@ -15,7 +15,7 @@
 
 <div class="card-block">
 
-  <table width="100%" border=1>
+  <table id="tb-table" class="table table-striped table-hover" width="100%" border=1>
     <tr>
       <th></th>
       {% for month in months_headers %}
@@ -32,7 +32,7 @@
     {% for row in accounts_set %}
     {% ifchanged row.account.element %}
     <tr>
-      <td colspan=12>{{ row.account.get_element_display }}</td>
+      <th colspan=12><p>{{ row.account.get_element_display }}</p></th>
       <td></td>
       <td></td>
     </tr>
@@ -48,8 +48,14 @@
 
       {% for total in row.month %}
       <td align="right"
-          class="list-group-item-{% if total %}{% if total|slice:"-2:" == 'DR' %}success{% else %}danger{% endif %}{% endif %}" style="white-space: nowrap">
-        {% if total %} {{ total }} {% endif %}
+          class="list-group-item-{% if total %}{% if total|slice:"-2:" == 'CR' %}danger{% else %}success{% endif %}{% endif %}" style="white-space: nowrap">
+        {% if total %}
+        {% if forloop.last %}
+          <strong>{{ total }}</strong>
+        {% else %}
+          {{ total }}
+        {% endif %}
+        {% endif %}
       </td>
       {% endfor %}
 

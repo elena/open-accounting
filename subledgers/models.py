@@ -134,7 +134,7 @@ class Entry(models.Model):
         # ** Part 1. convert dump to `list` of `dict` objects
         table = utils.tsv_to_dict(dump)
 
-        obj_list = []
+        obj_list, valid_kwargs = [], []
         for row_dict in table:
 
             # flush lines list at the beginning of each loop
@@ -181,6 +181,11 @@ class Entry(models.Model):
             # ** Part 3. validate_object_kwargs
             kwargs = Entry.validate_object_kwargs(kwargs, user, cls)
 
+            # crash whole set, rather than part way through set.
+            valid_kwargs.append(kwargs)
+
+        # If whole set has validated:
+        for kwargs in valid_kwargs:
             # ** Part 4. create_object
             # passing kwargs as dict not **kwargs
             new_object = Entry.create_object(kwargs, live=live)

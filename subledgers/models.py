@@ -140,7 +140,7 @@ class Entry(models.Model):
             # flush lines list at the beginning of each loop
             lines = []
 
-            # ** Part 2. Gettings `user` and `cls`
+            # ** Part 2. Gettings `cls`
             # copy kwargs to ensure valid set/uniform keys
             kwargs = {k.lower(): v for k, v in row_dict.items()}
 
@@ -155,7 +155,8 @@ class Entry(models.Model):
                 raise Exception(
                     "No `type` column specified, unable to create objects.")
 
-            # will fail if no relation
+            # Not validating here. Just stupidly getting and renaming
+            # relation class if it is in user input (row_dict).
             relk = [rel for rel in row_dict
                     if rel in settings.FIELD_IS_RELATION]
             if relk:
@@ -164,7 +165,9 @@ class Entry(models.Model):
                     kwargs['relation'] = Relation.get_relation_by_entry(
                         entity_code, cls.__name__)
                 else:
-                    kwargs.pop('relation')
+                    # if 'relation' in row_dict, but has no value,
+                    # just remove.
+                    kwargs.pop(relk[0])
 
             # 4. find account fields, add lines
             # 4a. find accounts, create line

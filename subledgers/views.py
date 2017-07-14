@@ -34,12 +34,13 @@ def upload_view(request, import_function=None):
                 )
             template_name = 'subledgers/upload_form.html'
             context_data['results'] = data
+            form = UploadForm()
+            context_data['form'] = form
             return render(request, template_name, context_data)
         else:
             form = UploadForm()
-
-        context_data['form'] = form
-        return render(request, template_name, context_data)
+            context_data['form'] = form
+            return render(request, template_name, context_data)
     else:
         return redirect("/admin/login/?next=/upload/")
 

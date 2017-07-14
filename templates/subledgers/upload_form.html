@@ -16,12 +16,6 @@
 
   <div class="card-block">
 
-    {% if results %}
-      {% for result in results %}
-        {{ result }}<br>
-      {% endfor %}
-    {% endif %}
-
     <ul class="list-group-item-warning" style="list-style: none;">
 
       <li><br>If select "Mixed" must define a <b><code>type</code></b> column.<br><br></li>
@@ -57,6 +51,13 @@
       <input type="submit" value="OK">
     </form>
     </p>
+
+    {% if results %}
+      {% for result in results %}
+        {{ result }}<br>
+      {% endfor %}
+    {% endif %}
+
 
   </div>
 {% endblock %}

@@ -5,7 +5,7 @@ from ..models import Entry
 
 class JournalEntry(Entry):
 
-    entity = models.ForeignKey(
+    relation = models.ForeignKey(
         'entities.Entity',
         default="", blank=True, null=True)
 

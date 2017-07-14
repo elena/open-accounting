@@ -21,7 +21,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('additional', models.CharField(blank=True, default='', max_length=128, null=True)),
-                ('entity', models.ForeignKey(blank=True, default='', null=True, on_delete=django.db.models.deletion.CASCADE, to='entities.Entity')),
+                ('relation', models.ForeignKey(blank=True, default='', null=True, on_delete=django.db.models.deletion.CASCADE, to='entities.Entity')),
                 ('transaction', models.OneToOneField(blank=True, default='', null=True, on_delete=django.db.models.deletion.CASCADE, to='ledgers.Transaction')),
             ],
             options={

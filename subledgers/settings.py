@@ -72,7 +72,7 @@ OBJECT_SETTINGS = {
     'JournalEntry': {
         'relation_class': 'entities.models.Entity',
         'source': 'subledgers.journals.models.JournalEntry',
-        'fields': FIELDS_ENTRY,
+        'fields': FIELDS_ENTRY + ['relation'],
         'required_fields': FIELDS_ENTRY_REQUIRED,
     },
     'BankEntry': {

@@ -11,48 +11,69 @@
 
 
 {% block content %}
+{% load humanize %}
 
 <div class="card-block">
 
-  <table border=0>
+  <div class="table-responsive">
+      <table class="table table-striped table-hover" width="100%" id="dataTable" cellspacing="0">
 
-    {% for obj in transaction_list %}
-    <tr>
-      <th style="white-space: nowrap" width=5>
-          {{ obj.date }}
-      </th>
-      <th style="white-space: nowrap">
-        <a href="/admin/ledgers/transaction/{{ obj.pk }}/">{{ obj.source }}</a>
-      </th>
-      <th style="white-space: nowrap; text-align: right">
-         {{ obj.value }}
-      </th>
-    </tr>
+        <thead>
+          <tr>
+            <th>id</th>
+            <th>Date</th>
+            <th>accounts</th>
+            <th>$</th>
+            <th>source</th>
+          </tr>
+        </thead>
 
-    {% for line in obj.lines.all %}
-    <tr>
-      <td>&nbsp;</td>
+        {% for obj in transaction_list %}
+        <tr id="row{{obj.pk}}" class="obj-row info"
+>
+          <td class="pk">
+            <div class="nowrap">
+              <a href="/admin/ledgers/transaction/{{ obj.pk }}/change/">{{ obj.pk }}</a>
+            </div>
+          </td>
 
-      <td style="white-space: nowrap">{{ line.account }}</td>
+          <td class="date">
+            <div class="nowrap">{{ obj.date|date:"Y/m/d" }}</div>
+          </td>
 
-      <td align="right"
-          class="list-group-item-{% if line.value %}{% if line.value > 0 %}success{% else %}danger{% endif %}{% endif %}" style="white-space: nowrap">
-        {{ line.value }}
-      </td>
-    </tr>
-    {% endfor %}
+          <td class="accounts">
 
-    <tr>
-      <td colspan=3>
-          {{ obj.note }}<br><br>
-      </td>
-    </tr>
-    {% if obj.note %}
-    {% endif %}
+              {% for line in obj.lines.all %}
+              <div style="white-space: nowrap">
+                <span style="white-space: nowrap; float: left; width: 5.8em;" align="right"
+                      class="list-group-item-{% if line.value %}{% if line.value > 0 %}success{% else %}danger{% endif %}{% endif %}">
+                  {{ line.value|intcomma }} &nbsp;
+                </span>
+                <span style="white-space: nowrap; float: left;"> &nbsp;
+                  <a href="{% url 'reports:account-detailview' line.account.get_code %}">
+                    {{ line.account }}
+                  </a>
+                </span>
+              </div><br>
+            {% endfor %}
+          </td>
 
-    {% endfor %}
+          <td style="text-align: right;" class="value">
+            <b><a href="/admin/ledgers/transaction/{{ obj.pk }}/change/">{{ obj.value|intcomma }}</a></b>
+          </td>
 
-  </table>
+          <td class="source">
+            {{ obj.source }}
+            {% if obj.note %}<br>{{ obj.note }}{% endif %}
+            {% if obj.reference %}<br>{{ obj.reference }}{% endif %}
+          </td>
+
+        </tr>
+        {% endfor %}
+
+      </table>
+    </div>
+
 
 </div>
 

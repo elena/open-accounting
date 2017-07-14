@@ -42,7 +42,7 @@ class Entry(models.Model):
             return "{} [{}]-- ${} ".format(self.relation.entity.code,
                                            self.transaction.date,
                                            self.transaction.value)
-        except AttributeError:
+        except (AttributeError, ValueError):
             if self.transaction.note:
                 return "{} -- ${} -- {}".format(self.transaction.date,
                                                 self.transaction.value,

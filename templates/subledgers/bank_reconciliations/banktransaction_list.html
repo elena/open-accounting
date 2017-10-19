@@ -51,11 +51,14 @@
       <table width="100%">
         <tr>
           <th>Account:
-            <input id="pk-field" name="pk" type="hidden" value=""></th>
-            <input id="date-field" name="date" type="hidden" value=""></th>
-            <input id="value-field" name="value" type="hidden" value=""></th>
+            <input id="pk-field" name="pk" type="hidden" value="">
+            <input id="date-field" name="date" type="hidden" value="">
+            <input id="value-field" name="value" type="hidden" value="">
             <input id="account-field" name="account" type="hidden" value=""></th>
-          <td width="80%"><strong><span class="btn btn-default btn-sm" id="account-view">&nbsp;</span></strong></td>
+          <td width="80%">
+            <strong><span class="btn btn-default btn-sm" id="account-view">&nbsp;</span></strong>
+            <span id="account-remove" style="display: none;"><i class="fa fa-close"></i></span>
+          </td>
           <td rowspan="3">
             <button type="submit"
                class="btn btn-sm btn-danger">
@@ -65,7 +68,10 @@
         </tr>
         <tr>
           <th>Transaction: <input id="transaction-field" name="notes" type="hidden"></th>
-          <td><strong><span style="text-align: left" class="btn btn-default btn-sm" id="transaction-view">&nbsp;</span></strong> </td>
+          <td>
+            <strong><span style="text-align: left" class="btn btn-default btn-sm" id="transaction-view">&nbsp;</span></strong>
+            <span id="transaction-remove" style="display: none;"><i class="fa fa-close"></i></span>
+          </td>
         </tr>
 
         {% comment %}
@@ -159,11 +165,29 @@ $(".obj-row").click(function() {
   $("#value-field").val($(this).data("value"));
   $("#date-field").val($(this).data("date"));
   $("#pk-field").val($(this).data("pk"));
+  $("#transaction-remove").show();
+})
+
+$("#transaction-remove").click(function() {
+  $("#transaction-view").html("");
+  $("#transaction-field").val("");
+  $("#value-field").val("");
+  $("#date-field").val("");
+  $("#pk-field").val("");
+  $(this).hide();
 })
 
 $(".btn-account").click(function() {
   $("#account-view").html($(this).data("account"));
   $("#account-field").val($(this).data("code"));
+  $("#account-remove").show();
+})
+
+
+$("#account-remove").click(function() {
+  $("#account-view").html("");
+  $("#account-field").val("");
+  $(this).hide();
 })
 
 $(".setNotNow").click(function() {

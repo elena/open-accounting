@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from decimal import Decimal
 
-from .models import BankTransaction
+from .models import BankLine
 from ledgers.utils import make_date
 from ledgers.bank_accounts.models import BankAccount
 
@@ -24,7 +24,7 @@ def import_bank_statement(data):
     list_kwargs = preprocessor(data['input_data'])
 
     for kwargs in list_kwargs:
-        new = BankTransaction(bank_account=bank, **kwargs)
+        new = BankLine(bank_account=bank, **kwargs)
         new.save()
         results.append(new)
 

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from rest_framework import serializers
 
-from .models import BankTransaction
+from .models import BankLine
 
 
-class BankTransactionSerializer(serializers.ModelSerializer):
+class BankLineSerializer(serializers.ModelSerializer):
 
     class Meta:
-        model = BankTransaction
+        model = BankLine
         exclude = ['bank_account']

@@ -3,7 +3,7 @@ from django import forms
 # from django.views import generic
 
 from ledgers.bank_accounts.models import BankAccount
-# from .models import BankTransaction
+# from .models import BankLine
 
 
 class StatementUploadForm(forms.Form):

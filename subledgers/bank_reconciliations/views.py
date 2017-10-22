@@ -10,14 +10,14 @@ from ledgers.utils import get_source, make_date
 from ledgers.bank_accounts.models import BankAccount
 
 from .forms import StatementUploadForm, BankReconciliationForm
-from .models import BankTransaction
-from .serializers import BankTransactionSerializer
+from .models import BankLine
+from .serializers import BankLineSerializer
 from .utils import import_bank_statement
 
 
-class BankTransactionViewSet(viewsets.ModelViewSet):
-    queryset = BankTransaction.objects.all()
-    serializer_class = BankTransactionSerializer
+class BankLineViewSet(viewsets.ModelViewSet):
+    queryset = BankLine.objects.all()
+    serializer_class = BankLineSerializer
     # permission_classes = [permissions.IsAdminUser]
 
 
@@ -43,7 +43,7 @@ def bank_reconciliation(request, account):
     template_name = 'subledgers/bank_reconciliations/banktransaction_list.html'
 
     context_data = {}
-    context_data['object_list'] = BankTransaction.objects.unreconciled()
+    context_data['object_list'] = BankLine.objects.unreconciled()
     context_data['bank_account'] = Account.objects.by_code(account)
     context_data['account_list'] = Account.objects.regular(
     ).order_by('element', 'number')
@@ -58,20 +58,20 @@ def bank_reconciliation(request, account):
             kwargs = {
                 'user': request.user,
                 'date':  make_date(str(form.cleaned_data.get('date'))),
-                'source': get_source(BankTransaction)
+                'source': get_source(BankLine)
             }
             new_transaction = Transaction(**kwargs)
             new_transaction.save(lines=lines)
-            this = BankTransaction.objects.get(pk=form.cleaned_data.get('pk'))
+            this = BankLine.objects.get(pk=form.cleaned_data.get('pk'))
             this.transaction = new_transaction
             this.save()
             context_data['success'] = "{} {}".format(this, this.transaction)
     return render(request, template_name, context_data)
 
 
-class BankTransactionListView(generic.list.ListView):
+class BankLineListView(generic.list.ListView):
 
-    model = BankTransaction
+    model = BankLine
     template_name = 'subledgers/bank_reconciliations/banktransaction_table.html'  # noqa
 
 

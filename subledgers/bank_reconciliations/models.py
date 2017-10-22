@@ -6,18 +6,22 @@ from . import querysets
 
 
 class BankEntry(Entry):
+    """ Inherits attribute `ledger.Transaction` from `subledger.Entry`. """
 
     bank_transaction = models.OneToOneField(
-        'bank_reconciliations.BankTransaction')
+        'bank_reconciliations.BankLine')
 
     class Meta:
         verbose_name_plural = "bank entries"
 
 
-class BankTransaction(models.Model):
-    """ Nothing to do with `subledgers.Transaction`.
+class BankLine(models.Model):
 
-    For reconciliation purposes.
+    # ** Outside of Trial Balance/accounting system **
+    # No relationship to `ledgers.Transaction`
+
+    """
+    For information storage and reconciliation purposes.
 
     List of transaction which come from the bank statements.
 

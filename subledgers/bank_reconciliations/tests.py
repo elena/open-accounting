@@ -9,10 +9,10 @@ from django.test import TestCase  # , Client
 
 from ledgers.models import Account, Transaction
 from ledgers.bank_accounts.models import BankAccount
-from .models import BankTransaction, BankEntry
+from .models import BankLine, BankEntry
 
 
-class TestBankTransactionQueryset(TestCase):
+class TestBankLineQueryset(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
@@ -36,7 +36,7 @@ class TestBankTransactionQueryset(TestCase):
                               source="{}".format(BankAccount.__module__))
         self.t1.save(lines=lines)
 
-        self.b1 = BankTransaction(date=date(2017, 6, 16), value=t1_value,
+        self.b1 = BankLine(date=date(2017, 6, 16), value=t1_value,
                                   bank_account=self.ba,
                                   line_dump='Test Transaction 1',
                                   description='Test Transaction 1')
@@ -46,26 +46,26 @@ class TestBankTransactionQueryset(TestCase):
                                            bank_transaction=self.b1)
 
         # banktransacion created only
-        self.b2 = BankTransaction(date=date(2017, 6, 16), value=Decimal(20),
+        self.b2 = BankLine(date=date(2017, 6, 16), value=Decimal(20),
                                   bank_account=self.ba,
                                   line_dump='Test Transaction 2',
                                   description='Test Transaction 2')
         self.b2.save()
-        self.b3 = BankTransaction(date=date(2017, 6, 16), value=Decimal(30),
+        self.b3 = BankLine(date=date(2017, 6, 16), value=Decimal(30),
                                   bank_account=self.ba,
                                   line_dump='Test Transaction 3',
                                   description='Test Transaction 3')
         self.b3.save()
 
     def test_banktransaction_queryset_reconcilied_passes(self):
-        reconciled_obj_list = BankTransaction.objects.reconciled()
+        reconciled_obj_list = BankLine.objects.reconciled()
         self.assertEqual(reconciled_obj_list.count(), 1)
         self.assertIn(self.b1, reconciled_obj_list)
         self.assertNotIn(self.b2, reconciled_obj_list)
         self.assertNotIn(self.b3, reconciled_obj_list)
 
     def test_banktransaction_queryset_unreconcilied_passes(self):
-        unreconciled_obj_list = BankTransaction.objects.unreconciled()
+        unreconciled_obj_list = BankLine.objects.unreconciled()
         self.assertEqual(unreconciled_obj_list.count(), 2)
         self.assertNotIn(self.b1, unreconciled_obj_list)
         self.assertIn(self.b2, unreconciled_obj_list)

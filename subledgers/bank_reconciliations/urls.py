@@ -22,7 +22,7 @@ urls = [
 
     # Reconcile listview
     url(r'^table/$',
-        views.BankTransactionListView.as_view(),
+        views.BankLineListView.as_view(),
         name='bank-transaction-listview'
         ),
 
@@ -35,7 +35,7 @@ urls = [
 
     # API urls
     url(r'^api/(?P<pk>[0-9]+)/$',
-        views.BankTransactionViewSet.as_view({
+        views.BankLineViewSet.as_view({
             'get': 'retrieve',
             'put': 'update',
             'post': 'update',

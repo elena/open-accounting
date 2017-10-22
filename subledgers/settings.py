@@ -4,6 +4,18 @@ from django.conf import settings
 
 DEFAULT_TERMS = getattr(settings, 'SUBLEDGERS_DEFAULT_TERMS', 14)
 
+AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
+
+
+# ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
+
+# Default ledger accounts
+#
+# @@ This is very opinionated. Will certainly have to be improved.
+
+# ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
+
+
 GST_DR_ACCOUNT = getattr(
     settings, 'GST_SPENT', '03-0713')
 
@@ -27,6 +39,15 @@ EXPENSE_CLEARING_ACCOUNT = getattr(
 SALES_CLEARING_ACCOUNT = getattr(
     settings, 'SALES_CLEARNING_ACCOUNT', '03-0410')
 
+
+# ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
+
+# Field definitions
+#
+# For use in imports.
+# @@ Explore making view for each import type.
+
+# ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
 # @@ TODO Could use whatever Django db|forms use to get required fields.
 # more control doing as follows

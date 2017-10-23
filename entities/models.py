@@ -42,6 +42,8 @@ class Entity(models.Model):
 
     name = models.CharField(max_length=128, blank=True, default="")
 
+    is_active = models.BooleanField(default=True)
+
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

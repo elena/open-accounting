@@ -4,7 +4,7 @@ from .models import BankLine, BankEntry
 
 
 class BankEntryAdmin(admin.ModelAdmin):
-    list_display = ['transaction', 'bank_transaction']
+    list_display = ['transaction', 'bank_line']
     list_filter = ['transaction__date']
 
 

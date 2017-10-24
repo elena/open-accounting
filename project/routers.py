@@ -12,7 +12,7 @@ from subledgers.bank_reconciliations import views as bank_reconciliations_views
 additional_routing_patterns = [
 
     url(r'^bank-reconciliations/(?P<pk>[0-9]+)/$',
-        bank_reconciliations_views.BankTransactionViewSet.as_view({
+        bank_reconciliations_views.BankLineViewSet.as_view({
             'get': 'retrieve',
             'put': 'update',
             'post': 'update',
@@ -37,7 +37,7 @@ router.register(r'ledgers',
 
 # Subledgers
 router.register(r'bank-reconciliations',
-                bank_reconciliations_views.BankTransactionViewSet)
+                bank_reconciliations_views.BankLineViewSet)
 
 
 urlpatterns = additional_routing_patterns + router.urls

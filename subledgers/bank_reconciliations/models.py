@@ -2,14 +2,22 @@
 from django.db import models
 
 from ..models import Entry
+from ..settings import SUBLEDGERS_AVAILABLE
 from . import querysets
 
 
 class BankEntry(Entry):
     """ Inherits attribute `ledger.Transaction` from `subledger.Entry`. """
 
-    bank_transaction = models.OneToOneField(
+    bank_line = models.OneToOneField(
         'bank_reconciliations.BankLine')
+
+    subledger = models.CharField(
+        max_length=50,
+        choices=[(subledger['actual'], subledger['human'])
+                 for subledger in SUBLEDGERS_AVAILABLE],
+        default='', blank=True)
+
 
     class Meta:
         verbose_name_plural = "bank entries"
@@ -78,9 +86,9 @@ class BankLine(models.Model):
 # Bank Account Matching
 
 # Same as above there is plenty of discussion here:
-# http://admin-accounting.blogspot.com/2017/06/bank-reconciliations-sure.html
-# http://admin-accounting.blogspot.com/2017/06/bank-import-process-matching-goes.html
-# http://admin-accounting.blogspot.com/2017/06/bank-accounts-couplingpayment-accounts.html
+# http://open-accounting.blogspot.com/2017/06/bank-reconciliations-sure.html
+# http://open-accounting.blogspot.com/2017/06/bank-import-process-matching-goes.html
+# http://open-accounting.blogspot.com/2017/06/bank-accounts-couplingpayment-accounts.html
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 

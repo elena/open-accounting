@@ -43,7 +43,7 @@ class TestBankLineQueryset(TestCase):
         self.b1.save()
 
         self.e1 = BankEntry.objects.create(transaction=self.t1,
-                                           bank_transaction=self.b1)
+                                           bank_line=self.b1)
 
         # banktransacion created only
         self.b2 = BankLine(date=date(2017, 6, 16), value=Decimal(20),

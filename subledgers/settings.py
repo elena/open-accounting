@@ -40,6 +40,34 @@ SALES_CLEARING_ACCOUNT = getattr(
     settings, 'SALES_CLEARNING_ACCOUNT', '03-0410')
 
 
+
+
+# This is used to categorise bank transactions
+# 3rd field is namespace used to generate URLs for jumping to matching page
+SUBLEDGERS_AVAILABLE = [
+    {'actual': 'creditors',
+     'human': 'Creditor',
+     'account': ACCOUNTS_PAYABLE_ACCOUNT,
+     'url': '/acp/'},
+    {'actual': 'expenses',
+     'human': 'Expense',
+     'account': EXPENSE_CLEARING_ACCOUNT,
+     'url': '/expenses/' },
+    {'actual': 'sales',
+     'human': 'Sale',
+     'account': SALES_CLEARING_ACCOUNT,
+     'url': '/sales/'},
+    {'actual': 'journals',
+     'human': 'Journal',
+     'account': None,
+     'url': '/journals/'},
+    {'actual': 'bank_reconciliations',
+     'human': 'Bank Reconciliation',
+     'account': None,
+     'url': '/bank/reconciliations/'},
+]
+
+
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
 # Field definitions

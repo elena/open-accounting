@@ -1,0 +1,72 @@
+    <!-- Navigation -->
+    <nav id="mainNav" class="navbar static-top navbar-toggleable-md navbar-inverse bg-inverse">
+
+      <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navbarExample" aria-controls="navbarExample" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand" href="/">Double-Entry Accounting + Subledgers</a>
+
+        <div class="collapse navbar-collapse" id="navbarExample">
+
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle mr-lg-2" href="#" id="messagesDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-fw fa-bars"></i> <span class="hidden-lg-up">Messages <span class="badge badge-pill badge-primary">0 New</span></span>
+                        <span class="new-indicator text-primary hidden-md-down"><i class="fa fa-fw fa-circle"></i><span class="number">0</span></span>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="messagesDropdown">
+                        <h6 class="dropdown-header">New Messages:</h6>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">
+                            <strong>John Doe</strong> <span class="small float-right text-muted">11:21 AM</span>
+                            <div class="dropdown-message small"></div>
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item small" href="#">
+                            View all messages
+                        </a>
+                    </div>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle mr-lg-2" href="#" id="alertsDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fa fa-fw fa-bell"></i> <span class="hidden-lg-up">Alerts <span class="badge badge-pill badge-warning">6 New</span></span>
+                        <span class="new-indicator text-warning hidden-md-down"><i class="fa fa-fw fa-circle"></i><span class="number">6</span></span>
+                    </a>
+                    <div class="dropdown-menu" aria-labelledby="alertsDropdown">
+                        <a class="dropdown-item" href="#">Action</a>
+                        <a class="dropdown-item" href="#">Another action</a>
+                        <a class="dropdown-item" href="#">Something else here</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <form class="form-inline my-2 my-lg-0 mr-lg-2">
+                        <div class="input-group">
+                            <input type="text" class="form-control" placeholder="Search for...">
+                            <span class="input-group-btn">
+                        <button class="btn btn-primary" type="button"><i class="fa fa-search"></i></button>
+                    </span>
+                        </div>
+                    </form>
+                </li>
+                <li>
+                {% if user.is_anonymous %}
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/"><i class="fa fa-fw fa-sign-in"></i> Login</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/"> Admin <i class="fa fa-fw fa-pencil-square"></i></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/">You are:  {{ user.username }} <i class="fa fa-fw fa-child"></i></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/admin/logout/"><i class="fa fa-fw fa-sign-out"></i> Logout</a>
+                </li>
+
+                {% endif %}
+            </ul>
+
+        </div>
+    </nav>

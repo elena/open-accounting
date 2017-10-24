@@ -60,13 +60,20 @@ class CreditorInvoice(SpecificRelation, Invoice):
     """
 
 
-    """ `Payment` has:
 class CreditorPayment(SpecificRelation, Payment):
 
-    `Entity` so can know status of account
+    # ** Outside of Trial Balance/accounting system **
+    # No relationship to `ledgers.Transaction`
 
+    """
+    >> inherit: `relation` from `SpecificRelation`
+
+    >> inherit: `bank_entry` from `Payment`
+
+
+    `Payment` has:
+    `relation`: `Entity` so can know status of account
     `Payment` <<>> `BankTransaction` so can know details of payment.
 
-    `Transaction` ledger for clearing ACP
     """
     pass

@@ -412,6 +412,29 @@ class Payment(models.Model):
         'bank_reconciliations.BankEntry',
         default='', blank=True, null=True)
 
+    # ---
+    # Minimum required fields for object.
+
+    date = models.DateField()
+
+    value = models.DecimalField(max_digits=19, decimal_places=2)
+
+    # ---
+    # Additional useful optional fields.
+
+    note = models.CharField(max_length=2048, blank=True, default="", null=True)
+
+    reference = models.CharField(max_length=128)
+
+    # ---
+    # For our internal use/reference.
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    updated_at = models.DateTimeField(auto_now=True)
+
     class Meta:
         abstract = True
 

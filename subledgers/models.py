@@ -79,7 +79,9 @@ class Entry(models.Model):
             return True
 
     def get_cls(name):
-        """ Input variations (convert to source_str):
+        """ Generically return
+
+        Input variations (convert to source_str):
         # 1. ModelObject
         # 2. object_name -- valid vanilla name, eg "CreditorInvoice"
         # 3. source_str
@@ -207,25 +209,24 @@ class Entry(models.Model):
     def validate_object_kwargs(kwargs, user, cls):
         """ for each line/row:
 
-            1. allocate class
+        1. allocate class
 
-            2. add `source` using ledgers.utils.get_source(`Model`)
+        2. add `source` using ledgers.utils.get_source(`Model`)
                             based upon `Model` provided in object settings
-               add `user` from positional arg
-               add `object` from positional arg
+           add `user` from positional arg
+           add `object` from positional arg
 
-            3. convert: IS_DATE using dateparser.parse
-                        IS_MONEY using ledgers.utils.make_decimal()
+        3. convert: IS_DATE using dateparser.parse
+                    IS_MONEY using ledgers.utils.make_decimal()
 
-            4. create and add `lines` list of tuples:
-               4a. find fields that are accounts using Account.get_account(key)
+        4. create and add `lines` list of tuples:
+           4a. find fields that are accounts using Account.get_account(key)
                add (k, v) to `lines`
 
-               4b.
-               add `value` (correct CR/DR)
+           4b. add `value` (correct CR/DR)
                add `gst_total` [optional, if specified in object settings]
 
-               4c. add `lines` to `kwargs`
+           4c. add `lines` to `kwargs`
 
         5. check all required fields are represented (or explode)
            append `row_dict` set to `list_kwargs`

@@ -16,7 +16,9 @@ class Creditor(Relation):
         return self.entity.name
 
 
-class SpecifyRelation(Relation, models.Model):
+
+
+class SpecificRelation(Relation, models.Model):
 
     # *** ABSTRACT CLASS ***
 
@@ -31,7 +33,7 @@ class SpecifyRelation(Relation, models.Model):
         abstract = True
 
 
-class CreditorInvoice(SpecifyRelation, Invoice):
+class CreditorInvoice(SpecificRelation, Invoice):
 
     """ `Invoice` is `Entry` that has more details.
     """
@@ -58,8 +60,8 @@ class CreditorInvoice(SpecifyRelation, Invoice):
     """
 
 
-class CreditorPayment(SpecifyRelation, Payment):
     """ `Payment` has:
+class CreditorPayment(SpecificRelation, Payment):
 
     `Entity` so can know status of account
 

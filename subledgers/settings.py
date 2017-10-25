@@ -39,39 +39,45 @@ EXPENSE_CLEARING_ACCOUNT = getattr(
 SALES_CLEARING_ACCOUNT = getattr(
     settings, 'SALES_CLEARNING_ACCOUNT', '03-0410')
 
+PAYROLL_CLEARING_ACCOUNT = getattr(
+    settings, 'PAYROLL_CLEARNING_ACCOUNT', '03-0450')
 
 
 
 # This is used to categorise bank transactions
 # 3rd field is namespace used to generate URLs for jumping to matching page
-SUBLEDGERS_AVAILABLE = [
-    {'actual': 'creditors',
+SUBLEDGERS_AVAILABLE = {
+    'creditors': {
      'human': 'Creditor',
      'account': ACCOUNTS_PAYABLE_ACCOUNT,
      'url': '/acp/'},
-    {'actual': 'expenses',
+    'expenses': {
      'human': 'Expense',
      'account': EXPENSE_CLEARING_ACCOUNT,
-     'url': '/expenses/' },
-    {'actual': 'sales',
+     'url': None}, #'/expenses/' },
+    'sales': {
      'human': 'Sale',
      'account': SALES_CLEARING_ACCOUNT,
-     'url': '/sales/'},
-    {'actual': 'journals',
+     'url': None}, #'/sales/'},
+    'wages': {
+     'human': 'Payroll',
+     'account': PAYROLL_CLEARING_ACCOUNT,
+     'url': None},
+    'journals': {
      'human': 'Journal',
      'account': None,
-     'url': '/journals/'},
-    {'actual': 'bank_reconciliations',
+     'url': None}, #'/journals/'},
+    'bank_reconciliations': {
      'human': 'Bank Reconciliation',
      'account': None,
      'url': '/bank/reconciliations/'},
-]
+}
 
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
 # Field definitions
-#
+
 # For use in imports.
 # @@ Explore making view for each import type.
 

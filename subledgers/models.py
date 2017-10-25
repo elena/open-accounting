@@ -78,6 +78,60 @@ class Entry(models.Model):
         else:
             return True
 
+    def save_transaction(self, transaction_kwargs):
+        """
+        @@TODO still should be pre-save signal, though this is simple
+
+        Minimum required fields:
+        {
+          'user':
+          'date':
+          'source':
+
+          'account_DR':
+          'account_CR':
+          'value':
+        or
+          'lines'
+        }
+        @@TODO list other available fields
+
+
+        Example usage:
+
+        # simple
+        new_journalentry = JournalEntry()
+        new_journalentry.save_transaction(kwargs)
+
+        # with entity:
+        new_creditorinvoice = CreditorInvoice(
+            invoice_number = 'abc123',
+            relation = Creditor.objects.get(code="GUI")
+        )
+        new_creditorinvoice.save_transaction(kwargs)
+        """
+
+        # Double check formats
+        transaction_kwargs['date'] = utils.make_date(transaction_kwargs['date'])
+        transaction_kwargs['source'] = utils.get_source(transaction_kwargs['source'])
+
+        # Get lines
+        if transaction_kwargs.get('lines'):
+            lines = transaction_kwargs.pop('lines')
+        else:
+            lines = (
+                transaction_kwargs.pop('account_DR'),
+                transaction_kwargs.pop('account_CR'),
+                transaction_kwargs.pop('value'),
+            )
+
+        new_transaction = Transaction(**transaction_kwargs)
+        new_transaction.save(lines=lines)
+
+        self.transaction = new_transaction
+        self.save()
+        return new_transaction
+
     def get_cls(name):
         """ Generically return
 

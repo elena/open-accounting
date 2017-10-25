@@ -15,6 +15,61 @@ from subledgers.sales.models import Sale
 from subledgers.journals.models import JournalEntry
 
 
+class TestModelEntrySaveTransaction(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            'test_staff_user', 'test@example.com', '1234')
+        self.user.is_staff = True
+        self.user.save()
+
+        self.code = "ABC"
+        self.entity = Entity.objects.create(name=self.code.lower())
+        self.creditor = Creditor.objects.create(entity=self.entity)
+
+        self.a1 = Account.objects.create(
+            element='01', number='0450', name='Account 1')
+        self.a2 = Account.objects.create(
+            element='01', number='0709', name='Account 2')
+
+        self.kwargs = {
+            'date': '5-May-2020',
+            'user': self.user,
+            'account_DR': self.a1,
+            'account_CR': self.a2,
+            'value': 1.00,
+        }
+
+    def test_journalentry_save_transaction_passes(self):
+        self.kwargs['source'] = utils.get_source(JournalEntry)
+        new_journalentry = JournalEntry()
+        new_journalentry.save_transaction(self.kwargs)
+        test_kwargs = {
+            'transaction__date': utils.make_date('5-May-2020'),
+            'transaction__user': self.user,
+            'transaction__value': 1.00,
+            'transaction__source': utils.get_source(JournalEntry)
+        }
+        test_object = JournalEntry.objects.get(**test_kwargs)
+        self.assertEqual(new_journalentry, test_object)
+
+    def test_creditorinvoice_save_transaction_passes(self):
+        self.kwargs['source'] = utils.get_source(CreditorInvoice)
+        new_creditorinvoice = CreditorInvoice(
+            invoice_number = 'abc123',
+            relation = self.creditor
+        )
+        new_creditorinvoice.save_transaction(self.kwargs)
+        test_kwargs = {
+            'transaction__date': utils.make_date('5-May-2020'),
+            'transaction__user': self.user,
+            'transaction__value': 1.00,
+            'transaction__source': utils.get_source(CreditorInvoice)
+        }
+        test_object = CreditorInvoice.objects.get(**test_kwargs)
+        self.assertEqual(new_creditorinvoice, test_object)
+
+
 class TestModelEntryCreateObjectJournal(TestCase):
 
     def setUp(self):

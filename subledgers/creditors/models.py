@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
-from subledgers.models import Invoice, Payment, Relation
+from datetime import date, timedelta
 from django.db import models
+
+from subledgers.models import Invoice, Payment, Relation
+from subledgers.settings import AGED_PERIODS
 
 
 class Creditor(Relation):
@@ -8,9 +11,14 @@ class Creditor(Relation):
     simpler queries.
     """
 
-    entity = models.ForeignKey('entities.Entity', related_name='creditors')
+    entity = models.OneToOneField('entities.Entity', related_name='creditors')
 
     terms = models.IntegerField(default=14)  # settings.DEFAULT_TERMS)
+
+
+
+    class Meta:
+        ordering = ['entity__name']
 
     def __str__(self):
         return self.entity.name
@@ -35,14 +43,15 @@ class SpecificRelation(Relation, models.Model):
 
 class CreditorInvoice(SpecificRelation, Invoice):
 
-    """ `Invoice` is `Entry` that has more details.
-    """
+    """ `Invoice` is `Entry` that has more details. """
 
     def __str__(self):
-        return "[{}] {} -- {} -- ${}".format(self.relation.entity.code,
+        return "[{}] {} -- {} -- ${} [oustanding: ${}]".format(self.relation.entity.code,
                                              self.transaction.date,
                                              self.invoice_number,
-                                             self.transaction.value)
+                                             self.transaction.value,
+                                             self.unpaid)
+
 
     """
     def is_fully_paid(self):
@@ -76,4 +85,32 @@ class CreditorPayment(SpecificRelation, Payment):
     `Payment` <<>> `BankTransaction` so can know details of payment.
 
     """
-    pass
+
+    invoices = models.ManyToManyField(
+        'creditors.CreditorInvoice',
+        through='creditors.CreditorPaymentInvoices')
+
+
+class CreditorPaymentInvoices(models.Model):
+
+    payment = models.ForeignKey('creditors.CreditorPayment')
+
+    invoice = models.ForeignKey('creditors.CreditorInvoice')
+
+    value = models.DecimalField(max_digits=19, decimal_places=2)
+
+
+class CreditorLearning(models.Model):
+
+    word = models.CharField(max_length=64, unique=True)
+
+    creditor = models.ForeignKey('creditors.Creditor')
+
+
+class CreditorMatch(models.Model):
+
+    bank_entry = models.ForeignKey('bank_reconciliations.BankEntry')
+
+    description = models.CharField(max_length=512)
+
+    creditor = models.ForeignKey('creditors.Creditor')

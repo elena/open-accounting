@@ -5,10 +5,9 @@ from django.utils.module_loading import import_string
 from subledgers.settings import OBJECT_SETTINGS
 
 
-OBJECT_CHOICES = sorted([(
+OBJECT_CHOICES = [(None, "Mixed (must define `type` column)"), ] + sorted([(
     x, import_string(OBJECT_SETTINGS[x]['source'])._meta.verbose_name.title())
-    for x in OBJECT_SETTINGS]) \
-    + [(None, "Mixed (must define `type` column)"), ]
+    for x in OBJECT_SETTINGS])
 
 LIVE = [
     (1, 'Live'),

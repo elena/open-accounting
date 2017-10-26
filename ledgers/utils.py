@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 import dateparser
+from datetime import date, datetime
 from dateutil.rrule import rrule, MONTHLY
 from decimal import Decimal
 from django.utils.module_loading import import_string
@@ -38,6 +39,12 @@ def make_date(value):
 
     Firmly enforce non-ambiguous date by Month as word eg: 2-May-2017.
     """
+    if type(value)==date:
+        return value
+
+    if type(value)==datetime:
+        return value
+
     month_as_word = re.sub(r'[^a-zA-Z.]', '', value)
     if not month_as_word:
         raise Exception(

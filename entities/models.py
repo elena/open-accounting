@@ -37,8 +37,7 @@ class Entity(models.Model):
     """
     code = models.CharField(max_length=6,
                             unique=True,
-                            help_text="Unique lookup code."
-                            )
+                            help_text="Unique lookup code.")
 
     name = models.CharField(max_length=128, blank=True, default="")
 
@@ -57,8 +56,15 @@ class Entity(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.code = utils.generate_unique_code(
-                queryset=Entity.objects.all(),
-                code=self.name
-            )
-        return super(Entity, self).save( *args, **kwargs)
+            self.code = utils.generate_code(code=self.name)
+        return super(Entity, self).save(*args, **kwargs)
+
+    def create_related(self, relation):
+        """
+        Example usage:
+
+        entity = Entity.objects.get(code="abc")
+        entity.create_related(Creditor)
+        """
+
+        return relation.objects.get_or_create(entity=self)[0]

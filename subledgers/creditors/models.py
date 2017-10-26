@@ -3,6 +3,7 @@ from datetime import date, timedelta
 from django.db import models
 
 from subledgers.models import Invoice, Payment, Relation
+from subledgers.querysets import InvoiceQuerySet
 from subledgers.settings import AGED_PERIODS
 
 

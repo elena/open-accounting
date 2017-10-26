@@ -14,8 +14,8 @@ class BankEntry(Entry):
 
     subledger = models.CharField(
         max_length=50,
-        choices=[(subledger['actual'], subledger['human'])
-                 for subledger in SUBLEDGERS_AVAILABLE],
+        choices=[(subledger, SUBLEDGERS_AVAILABLE[subledger]['human'])
+                 for subledger in SUBLEDGERS_AVAILABLE.keys()],
         default='', blank=True)
 
 

@@ -10,6 +10,10 @@
 
 {% block content %}
 
+
+<div class="row" style="margin: 0 20px;">
+
+  <div class="col">
   <div class="card-block">
 
     <h4>Reporting</h4>
@@ -19,6 +23,12 @@
     <p>
       <a href="/reports/tb/">
         <strong>Trial Balance</strong> -- /reports/tb/
+      </a>
+    </p>
+
+    <p>
+      <a href="/reports/entity/">
+        <strong>Creditors</strong> -- /reports/entity/
       </a>
     </p>
 
@@ -55,26 +65,21 @@
 
     <h5>Entities</h5>
     <p>
-      <a href="/admin/entities/">
-        <strong>Entities Admin</strong> -- /admin/entities/
+      <a href="/admin/entities/entity/">
+        <strong>Entities Admin</strong> -- /admin/entities/entity/
       </a>
     </p>
 
   </div>
+  </div>
 
+
+  <div class="col">
   <div class="card-block">
 
     <h4>Subledgers</h4>
 
     <br>
-
-    <h5>Bank Statements</h5>
-    <p>
-      <a href="{% url "bank-reconciliations:bank-reconciliation-index" %}">
-        <strong>View Bank Reconciliations</strong> -- {% url "bank-reconciliations:bank-reconciliation-index" %}
-      </a>
-    </p>
-
 
     <h5>Upload Bank Statements</h5>
     <p>
@@ -83,13 +88,55 @@
       </a>
     </p>
 
-    <h5>Bank Transaction Table</h5>
+    <h5><b>Bank Statements</b></h5>
+    <p>
+      <a href="{% url "bank-reconciliations:bank-reconciliation-index" %}">
+        <strong>View Bank Reconciliations</strong> -- {% url "bank-reconciliations:bank-reconciliation-index" %}
+      </a>
+    </p>
+
+    <p>
+      <a href="{% url "bank-reconciliations:bank-categorisation" %}">
+        <strong>View Bank Transaction Sort</strong> -- {% url "bank-reconciliations:bank-categorisation" %}
+      </a>
+    </p>
+
     <p>
       <a href="{% url "bank-reconciliations:bank-transaction-listview" %}">
         <strong>View Bank Transaction with PK</strong> -- {% url "bank-reconciliations:bank-transaction-listview" %}
       </a>
     </p>
 
+
+---
+
+    <h5><b>Creditors</b></h5>
+    <p>
+      <a href="{% url "creditors:creditors-index" %}">
+        <strong>View Creditors</strong> -- {% url "creditors:creditors-index" %}
+      </a>
+    </p>
+
+    <p>
+      <a href="{% url "creditors:creditors-invoices" %}">
+        <strong>View Creditors Invoices</strong> -- {% url "creditors:creditors-invoices" %}
+      </a>
+    </p>
+
+    <p>
+      <a href="{% url "creditors:creditors-payments" %}">
+        <strong>View Creditors Payments</strong> -- {% url "creditors:creditors-payments" %}
+      </a>
+    </p>
+
   </div>
+  </div>
+
+  <div class="col">
+  </div>
+
+</div>
+
+
 
 {% endblock %}

@@ -6,15 +6,19 @@ from . import views
 
 urls = [
 
-    # Reconcile listview
+    # Reconcile index
     url(r'^$',
         views.BankAccountListView.as_view(),
         name='bank-reconciliation-index'
         ),
 
+    # Categorisation view
+    url(r'^sort/$',
+        views.bank_categorisation,
+        name='bank-categorisation'
+        ),
 
-
-    # Reconcile listview
+    # Bank reconciliation by Account
     url(r'^(?P<account>[0-9\-]+)/$',
         views.bank_reconciliation,
         name='bank-reconciliation'
@@ -25,7 +29,6 @@ urls = [
         views.BankLineListView.as_view(),
         name='bank-transaction-listview'
         ),
-
 
     # Statement upload
     url(r'^statements/$',

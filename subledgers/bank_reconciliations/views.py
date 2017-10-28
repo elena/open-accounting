@@ -5,12 +5,14 @@ from django.views import generic
 # from rest_framework import permissions
 from rest_framework import viewsets
 
+from ledgers.bank_accounts.models import BankAccount
 from ledgers.models import Account, Transaction
 from ledgers.utils import get_source, make_date
-from ledgers.bank_accounts.models import BankAccount
+from subledgers.settings import SUBLEDGERS_AVAILABLE
+
 
 from .forms import StatementUploadForm, BankReconciliationForm
-from .models import BankLine
+from .models import BankLine, BankEntry
 from .serializers import BankLineSerializer
 from .utils import import_bank_statement
 
@@ -38,33 +40,75 @@ def add_statements(request):
     return render(request, template_name, context_data)
 
 
+def bank_categorisation(request):
+    template_name = "subledgers/bank_reconciliations/bank_categorisation.html"
+    context_data = {
+        'object_list': BankLine.objects.unreconciled(),
+        'subledger_list': SUBLEDGERS_AVAILABLE,
+    }
+    # @@TOOD: figure out how to display already sorted.
+
+    if request.method == 'POST':
+        context_data['request'] = request.POST
+        subledger = request.POST['subledger']
+        log = []
+
+        for field in request.POST:
+            if field.split('-')[0]=='catpk':
+                # @@TODO make this a method of some kind.
+                pk = field.split('-')[1]
+                bank_line = BankLine.objects.get(pk=pk)
+                if request.POST['manual-account']:
+                    account = request.POST['manual-account']
+                else:
+                    account = SUBLEDGERS_AVAILABLE[subledger]['account']
+
+                transaction_kwargs = {
+                    'user': request.user,
+                    'date':  bank_line.date,
+                    'source': get_source(BankEntry),
+                    'value': bank_line.value,
+                    'account_DR': account,
+                    'account_CR': bank_line.bank_account.account
+                }
+                bank_entry = BankEntry(
+                    bank_line=bank_line,
+                    subledger=subledger
+                )
+                bank_entry.save_transaction(transaction_kwargs)
+                log.append(bank_entry)
+
+        context_data['test'] = log
+
+    return render(request, template_name, context_data)
+
+
 def bank_reconciliation(request, account):
 
     template_name = 'subledgers/bank_reconciliations/banktransaction_list.html'
 
-    context_data = {}
-    context_data['object_list'] = BankLine.objects.unreconciled()
-    context_data['bank_account'] = Account.objects.by_code(account)
-    context_data['account_list'] = Account.objects.regular(
-    ).order_by('element', 'number')
+    context_data = {
+        'object_list': BankLine.objects.unreconciled(),
+        'bank_account': Account.objects.by_code(account),
+        'account_list': Account.objects.regular(
+        ).order_by('element', 'number')
+    }
 
     if request.method == 'POST':
         form = BankReconciliationForm(request.POST)
         context_data['success'] = request.POST
+
         if form.is_valid():
-            value = form.cleaned_data.get('value')
-            line_account = form.cleaned_data.get('account')
-            lines = (account, line_account, value)
-            kwargs = {
+            transaction_kwargs = {
                 'user': request.user,
-                'date':  make_date(str(form.cleaned_data.get('date'))),
-                'source': get_source(BankLine)
+                'date':  str(form.cleaned_data.get('date')),
+                'source': get_source(BankLine),
+                'value': form.cleaned_data.get('value'),
+                'account_DR': account,
+                'account_CR': form.cleaned_data.get('account'),
             }
-            new_transaction = Transaction(**kwargs)
-            new_transaction.save(lines=lines)
             this = BankLine.objects.get(pk=form.cleaned_data.get('pk'))
-            this.transaction = new_transaction
-            this.save()
+            this.save_transaction(transaction_kwargs)
             context_data['success'] = "{} {}".format(this, this.transaction)
     return render(request, template_name, context_data)
 

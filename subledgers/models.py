@@ -36,6 +36,7 @@ class Entry(models.Model):
 
     class Meta:
         abstract = True
+        ordering = ['transaction__date'] 
 
     def __str__(self):
         try:
@@ -446,6 +447,9 @@ class Invoice(Entry):
     gst_total = models.DecimalField(
         max_digits=19, decimal_places=2, default=Decimal('0.00'))
 
+    unpaid = models.DecimalField(
+        max_digits=19, decimal_places=2, default=Decimal('0.00'))
+
     class Meta:
         abstract = True
 
@@ -470,20 +474,24 @@ class Payment(models.Model):
     # ---
     # Minimum required fields for object.
 
-    date = models.DateField()
+    # will get date from BankEntry. Will never vary from bank statement.
+    # date = models.DateField()
 
-    value = models.DecimalField(max_digits=19, decimal_places=2)
+    # will get value from BankEntry.Transaction. Risky to duplicate.
+    # before there is a BankEntry, can just user invoices total.
+    # value = models.DecimalField(max_digits=19, decimal_places=2)
 
     # ---
     # Additional useful optional fields.
 
     note = models.CharField(max_length=2048, blank=True, default="", null=True)
 
-    reference = models.CharField(max_length=128)
+    reference = models.CharField(max_length=128, blank=True, default="", null=True)
 
     # ---
     # For our internal use/reference.
 
+    # could be useful to know who matched/created the payment object
     user = models.ForeignKey(settings.AUTH_USER_MODEL)
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -500,6 +508,8 @@ class Relation(models.Model):
 
     """ All that `Relation` does is provide `get_relation` model method.
     """
+
+    is_active = models.BooleanField(default=True)
 
     class Meta:
         abstract = True

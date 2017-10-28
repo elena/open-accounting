@@ -89,10 +89,10 @@ class CreditorPayment(SpecificRelation, Payment):
 
     invoices = models.ManyToManyField(
         'creditors.CreditorInvoice',
-        through='creditors.CreditorPaymentInvoices')
+        through='creditors.CreditorPaymentInvoice')
 
 
-class CreditorPaymentInvoices(models.Model):
+class CreditorPaymentInvoice(models.Model):
 
     payment = models.ForeignKey('creditors.CreditorPayment')
 

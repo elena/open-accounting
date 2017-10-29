@@ -453,6 +453,13 @@ class Invoice(Entry):
     class Meta:
         abstract = True
 
+    def save(self, *args, **kwargs):
+        super(Invoice, self).save(*args, **kwargs)
+        if not self.creditorpayment_set.all():
+            self.unpaid = self.transaction.value
+        return super(Invoice, self).save(*args, **kwargs)
+
+
 
 class Payment(models.Model):
 

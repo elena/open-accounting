@@ -6,6 +6,7 @@ DEFAULT_TERMS = getattr(settings, 'SUBLEDGERS_DEFAULT_TERMS', 14)
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL')
 
+AGED_PERIODS = [7, 14, 30, 60, 90, 120]
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 

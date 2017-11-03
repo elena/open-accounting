@@ -17,12 +17,6 @@ AGED_PERIODS = [7, 14, 30, 60, 90, 120]
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
 
 
-GST_DR_ACCOUNT = getattr(
-    settings, 'GST_SPENT', '03-0713')
-
-GST_CR_ACCOUNT = getattr(
-    settings, 'GST_COLLECTED', '03-0733')
-
 ACCOUNTS_PAYABLE_ACCOUNT = getattr(
     settings, 'ACCOUNTS_PAYABLE_ACCOUNT', '03-0300')
 
@@ -44,34 +38,35 @@ PAYROLL_CLEARING_ACCOUNT = getattr(
     settings, 'PAYROLL_CLEARNING_ACCOUNT', '03-0450')
 
 
-
 # This is used to categorise bank transactions
 # 3rd field is namespace used to generate URLs for jumping to matching page
 SUBLEDGERS_AVAILABLE = {
     'creditors': {
-     'human': 'Creditor',
-     'account': ACCOUNTS_PAYABLE_ACCOUNT,
-     'url': '/acp/'},
+        'human': 'Creditor',
+        'account': ACCOUNTS_PAYABLE_ACCOUNT,
+        'url': '/acp/'},
     'expenses': {
-     'human': 'Expense',
-     'account': EXPENSE_CLEARING_ACCOUNT,
-     'url': None}, #'/expenses/' },
+        'human': 'Expense',
+        'account': EXPENSE_CLEARING_ACCOUNT,
+        'url': None},  # '/expenses/' },
     'sales': {
-     'human': 'Sale',
-     'account': SALES_CLEARING_ACCOUNT,
-     'url': None}, #'/sales/'},
+        'human': 'Sale',
+        'account': SALES_CLEARING_ACCOUNT,
+        'url': None},  # '/sales/'},
     'wages': {
-     'human': 'Payroll',
-     'account': PAYROLL_CLEARING_ACCOUNT,
-     'url': None},
+        'human': 'Payroll',
+        'account': PAYROLL_CLEARING_ACCOUNT,
+        'url': None},
     'journals': {
-     'human': 'Journal',
-     'account': None,
-     'url': None}, #'/journals/'},
+        'human': 'Journal',
+        'account': None,
+        'url': None},  # '/journals/'},
     'bank_reconciliations': {
-     'human': 'Bank Reconciliation',
-     'account': None,
-     'url': '/bank/reconciliations/'},
+        'human': 'Bank Reconciliation',
+        'account': None,
+        'url': '/bank/reconciliations/'},
+    # 'debtors', ACCOUNTS_RECEIVABLE_ACCOUNT
+    # 'wages',
 }
 
 
@@ -94,25 +89,10 @@ OTHER_REQUIRED_FIELDS = ['object_name', 'cls', 'lines']
 
 FIELDS_TRANSACTION_REQUIRED = ['date', 'value', 'user', 'source']
 
-FIELDS_TRANSACTION = FIELDS_TRANSACTION_REQUIRED + ['note']
-
 FIELDS_ENTRY_REQUIRED = []
-
-FIELDS_ENTRY = FIELDS_ENTRY_REQUIRED + ['additional', 'relation']
-
 FIELDS_BANK_ENTRY_REQUIRED = ['bank_transaction_id']
-
-FIELDS_BANK_ENTRY = FIELDS_BANK_ENTRY_REQUIRED + ['additional']
-
 FIELDS_PAYMENT_REQUIRED = ['relation', 'bank_transaction_id']
-
-FIELDS_PAYMENT = FIELDS_PAYMENT_REQUIRED + ['additional']
-
 FIELDS_INVOICE_REQUIRED = ['invoice_number', 'gst_total', 'relation']
-
-# All fields available to invoices (required or not)
-FIELDS_INVOICE = FIELDS_INVOICE_REQUIRED + \
-    ['order_number', 'reference', 'due_date', 'relation']
 
 FIELD_IS_DATE = ['date']
 FIELD_IS_DECIMAL = ['value', 'gst_total']
@@ -128,14 +108,12 @@ OBJECT_SETTINGS = {
     'JournalEntry': {
         'relation_class': 'entities.models.Entity',
         'source': 'subledgers.journals.models.JournalEntry',
-        'fields': FIELDS_ENTRY + ['relation'],
         'required_fields': FIELDS_ENTRY_REQUIRED,
     },
     'BankEntry': {
         'relation_class': False,
         'source': 'subledgers.bank_reconciliations.models.BankEntry',
-        'is_tb_account_DR': True,
-        'fields': FIELDS_BANK_ENTRY,
+        'is_tb_account_CR': True,
         'required_fields': FIELDS_BANK_ENTRY_REQUIRED,
     },
 
@@ -143,7 +121,6 @@ OBJECT_SETTINGS = {
         'source': 'subledgers.sales.models.Sale',
         'tb_account': SALES_CLEARING_ACCOUNT,
         'is_tb_account_DR': True,
-        'fields': FIELDS_ENTRY,
         'required_fields': FIELDS_ENTRY_REQUIRED,
     },
     'Expense': {
@@ -151,7 +128,6 @@ OBJECT_SETTINGS = {
         'source': 'subledgers.expenses.models.Expense',
         'tb_account': EXPENSE_CLEARING_ACCOUNT,
         'is_tb_account_CR': True,
-        'fields': FIELDS_ENTRY,
         'required_fields': FIELDS_ENTRY_REQUIRED,
     },
 
@@ -160,20 +136,8 @@ OBJECT_SETTINGS = {
         'source': 'subledgers.creditors.models.CreditorInvoice',
         'tb_account': ACCOUNTS_PAYABLE_ACCOUNT,
         'is_tb_account_CR': True,
-        'fields': FIELDS_INVOICE,
         'required_fields': FIELDS_INVOICE_REQUIRED,
     },
-
-
-    # 'DebtorInvoice': {
-    #     'is_GST': True,
-    #     'entity': Debtor,
-    #     'source': DebtorInvoice,
-    #     'tb_account':  ACCOUNTS_RECEIVABLE_ACCOUNT,
-    #     'is_DR_in_tb': True,
-    #     'fields': FIELDS_INVOICE,
-    #     'required_fields': FIELDS_INVOICE_REQUIRED,
-    # },
 
 }
 

@@ -140,7 +140,6 @@ OBJECT_SETTINGS = {
     },
 
     'Sale': {
-        'is_GST': True,
         'source': 'subledgers.sales.models.Sale',
         'tb_account': SALES_CLEARING_ACCOUNT,
         'is_tb_account_DR': True,
@@ -148,7 +147,6 @@ OBJECT_SETTINGS = {
         'required_fields': FIELDS_ENTRY_REQUIRED,
     },
     'Expense': {
-        'is_GST': True,
         'relation_class': 'entities.models.Entity',
         'source': 'subledgers.expenses.models.Expense',
         'tb_account': EXPENSE_CLEARING_ACCOUNT,
@@ -158,7 +156,6 @@ OBJECT_SETTINGS = {
     },
 
     'CreditorInvoice': {
-        'is_GST': True,
         'relation_class': 'subledgers.creditors.models.Creditor',
         'source': 'subledgers.creditors.models.CreditorInvoice',
         'tb_account': ACCOUNTS_PAYABLE_ACCOUNT,

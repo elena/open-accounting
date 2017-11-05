@@ -2,11 +2,12 @@
 from django.db import models
 from django.utils.module_loading import import_string
 from decimal import Decimal
+from importlib import import_module
 
-from subledgers import settings
-from ledgers import utils
 from entities.models import Entity
+from ledgers import utils
 from ledgers.models import Account, Transaction
+from subledgers import settings
 
 
 # ~~~~~~~ ======= ######################################### ======== ~~~~~~~ #
@@ -36,7 +37,7 @@ class Entry(models.Model):
 
     class Meta:
         abstract = True
-        ordering = ['transaction__date'] 
+        ordering = ['transaction__date']
 
     def __str__(self):
         try:
@@ -450,6 +451,9 @@ class Invoice(Entry):
     unpaid = models.DecimalField(
         max_digits=19, decimal_places=2, default=Decimal('0.00'))
 
+    # Provide something to sanity check DR/CR
+    is_credit = models.BooleanField(default=False)
+
     class Meta:
         abstract = True
 
@@ -493,7 +497,8 @@ class Payment(models.Model):
 
     note = models.CharField(max_length=2048, blank=True, default="", null=True)
 
-    reference = models.CharField(max_length=128, blank=True, default="", null=True)
+    reference = models.CharField(
+        max_length=128, blank=True, default="", null=True)
 
     # ---
     # For our internal use/reference.

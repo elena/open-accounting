@@ -28,6 +28,15 @@ class Creditor(Relation):
 
 
 
+class CreditorAccount(models.Model):
+
+    creditor = models.ForeignKey('creditors.Creditor')
+
+    account = models.ForeignKey('ledgers.Account')
+
+    order = models.CharField(max_length=16, default=0)
+
+
 class SpecificRelation(Relation, models.Model):
 
     # *** ABSTRACT CLASS ***
@@ -48,8 +57,6 @@ class CreditorInvoice(SpecificRelation, Invoice):
     """ `Invoice` is `Entry` that has more details. """
 
     class Meta:
-        ordering = ['transaction__date'] 
-    
     def __str__(self):
         return "[{}] {} -- {} -- ${} [outstanding: ${}]".format(
             self.relation.entity.code, self.transaction.date,
@@ -65,14 +72,13 @@ class CreditorInvoice(SpecificRelation, Invoice):
     def outstanding_balance(self):
         value = self.transaction.value
         paid = self.creditorpaymentinvoice_set.aggregate(
-            sum=models.Sum('value')) 
+            sum=models.Sum('value'))
         if paid['sum']:
             self.unpaid = value - paid['sum']
         else:
             self.unpaid = value
         self.save()
         return self.unpaid
-
 
 
 class CreditorPayment(SpecificRelation, Payment):
@@ -82,9 +88,7 @@ class CreditorPayment(SpecificRelation, Payment):
 
     """
     >> inherit: `relation` from `SpecificRelation`
-
     >> inherit: `bank_entry` from `Payment`
-
 
     `Payment` has:
     `relation`: `Entity` so can know status of account
@@ -92,16 +96,16 @@ class CreditorPayment(SpecificRelation, Payment):
 
     """
 
-    invoices = models.ManyToManyField(
-        'creditors.CreditorInvoice',
-        through='creditors.CreditorPaymentInvoice')
+    invoices = models.ManyToManyField('creditors.CreditorInvoice',
+                                      blank=True,
+                                      through='creditors.CreditorPaymentInvoice')
 
     def __str__(self):
         return "[{}] {} -- {} -- ${}".format(
             self.relation.entity.code, self.relation.entity.name,
             self.bank_entry.transaction.date,
             self.bank_entry.transaction.value)
-    
+
     def has_invoices(self):
         return self.creditorpaymentinvoice_set.count()
 
@@ -122,7 +126,7 @@ class CreditorPayment(SpecificRelation, Payment):
             invoice = crpayinv.invoice
             crpayinv.delete()
             invoice.outstanding_balance()
-            
+
     def match_invoices(self, value=None):
         """ Automatic matching done by LIFO.
 
@@ -143,13 +147,13 @@ class CreditorPayment(SpecificRelation, Payment):
                     invoice=invoice,
                 )
                 if total > invoice.unpaid:
-                    total = total-invoice.unpaid                 
+                    total = total - invoice.unpaid
                     new_crpayinv.value = invoice.unpaid
                     new_crpayinv.save()
                 elif total < invoice.unpaid:
                     new_crpayinv.value = total
                     new_crpayinv.save()
-                    total = 0                
+                    total = 0
             else:
                 break
         return self.invoices.all()

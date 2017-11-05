@@ -64,6 +64,7 @@ class BankLine(models.Model):
                                   null=True, blank=True, default=None)
 
     not_now = models.BooleanField(default=False)
+
     # ~~ working fields ~~
 
     note = models.CharField(max_length=64, blank=True, default=None, null=True)

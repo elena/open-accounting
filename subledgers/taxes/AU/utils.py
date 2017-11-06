@@ -1,13 +1,21 @@
 # -*- coding: utf-8 -*-
-from importlib import import_module
 from ledgers import utils
+from ledgers.models import Account
+from . import settings
 
 
-def process_tax(country_code, cls, kwargs):
-    settings = import_module(
-        'subledgers.taxes.{}.settings'.format(country_code))
+def process_tax(cls, kwargs):
+    """ Just a check that GST is defined if required.
+
+    If subledger requires GST error will be raised if GST
+    not defined.
+
+    GST should be defined in one of two ways:
+    - GST tb account being used
+    - `GST total` column/ `gst_total` key in kwargs
+    """
+
     object_settings = settings.OBJECT_SETTINGS
-
     lines = kwargs['lines']
 
     # @@ TODO facilitate other taxes and surcharges.
@@ -21,8 +29,10 @@ def process_tax(country_code, cls, kwargs):
         # First check if GST_CR_ACCOUNT or GST_DR_ACCOUNT lines exist
         gst_allocated = False
         for line in lines:
-            if line[0] == settings.GST_DR_ACCOUNT\
-               or line[0] == settings.GST_CR_ACCOUNT:
+            if Account.get_account(line[0]) == \
+               Account.get_account(settings.GST_DR_ACCOUNT)\
+               or Account.get_account(line[0]) == \
+               Account.get_account(settings.GST_CR_ACCOUNT):
                 gst_allocated = True
 
         # If not:

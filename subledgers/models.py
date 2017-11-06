@@ -55,11 +55,212 @@ class Entry(models.Model):
 
     # Entry specific utilities:
 
-    def get_required(object_name):
+    def save_transaction(self, kwargs):
+        """ Creates self instance with necessary `Transaction` and `Lines`
+        based upon kwargs provided.
+
+        @@TODO still should be pre-save signal, though this is simple.
+
+        `account` and `accounts` DON'T include tb account.
+        This is inferred from cls/self and OBJECT_SETTINGS.
+
+        `lines` are complete and should balance to zero.
+
+        Minimum required fields:
+        {
+          'user':
+          'date':
+          'account':
+          'value':
+        or
+          'accounts'
+        }
+
+        Note: if `JournalEntry` must define:
+        {
+          'account_DR':
+          'account_CR':
+          'value':
+        or
+          'lines'
+        }
+
+        where:
+            accounts = [
+              (account, val),
+              (account, val),
+              (account, val)]
+              **tb account not included, added later**
+            lines = [
+              (account_DR, val),
+              (account_DR, val),
+              (account_DR, val, notes),
+              (account_CR, val, notes),
+              (account_CR, val)]
+
+        Note: see `Transaction` documentation regarding correct use of `lines`
+        or simplified case of providing (`ac_DR`, `ac_CR`, `value`).
+
+        Example usage of `.save_transaction`:
+
+        # simple
+        new_journalentry = JournalEntry()
+        new_journalentry.save_transaction(kwargs)
+
+        # with entity:
+        kwargs['invoice_number'] = 'abc123'
+        kwargs['relation'] = Creditor.objects.get(code="GUI")
+        new_creditorinvoice = CreditorInvoice()
+        new_creditorinvoice.save_transaction(kwargs)
+        """
+
+        print("--", kwargs)
+        lines = self.make_lines(kwargs)
+
+        return lines
+
+    def process_account(self, account, val):
+        """ If only account is provided, retrieve tb account. """
+        print("++", Account.get_account(account), utils.set_DR(val))
+        return [(Account.get_account(account), utils.set_DR(val))]
+
+    def process_accounts(self, accounts):
+        lines = []
+        for account, val in accounts:
+            # Note use of [0], .process_account return list
+            lines.append(self.process_account(account, val)[0])
+        return lines
+
+    def process_line(self, account_DR, account_CR, val):
+        return [(Account.get_account(account_DR), utils.set_DR(val)),
+                (Account.get_account(account_CR), utils.set_CR(val))]
+
+    def process_lines_tax(self, kwargs, local=None):
+        # Process tax
+        # BEFORE set_lines_sign
+        # @@ TODO: set country better, should be a setting somewhere probably
+        if not local:
+            local = 'AU'
+        taxes_utils = import_module('subledgers.taxes.{}.utils'.format(local))
+        lines = taxes_utils.process_tax(self, kwargs)
+        return lines
+
+    def check_lines_equals_value(self, kwargs):
+        balance = self.get_balance_lines(kwargs['lines'])
+        if kwargs.get('value') and\
+           not Decimal(kwargs.get('value')) == abs(Decimal(balance)):
+            raise Exception('Value provide ({}) does not equal remaining balance: {}'.format(kwargs['value'], bal))  # noqa
+        return True
+
+    def get_lines_balance(self, lines):
+        balance = 0
+        for i, line in enumerate(lines):
+            balance += line[1]
+        return balance
+
+    def get_tb_account(self):
+        object_settings = settings.OBJECT_SETTINGS[utils.get_source_name(self)]
+        if object_settings.get('tb_account'):
+            return Account.get_account(object_settings.get('tb_account'))
+        return False
+
+    def set_lines_sign(self, lines):
+        # invert signs if DR
+        if self.is_cr_or_dr_in_tb() == 'DR':
+            inverted_lines = []
+            for line in lines:
+                inverted_line = (line[0], line[1])
+                if len(line) == 3:  # if there is a `note`
+                    inverted_line = inverted_line + line[2]
+                inverted_lines.append(inverted_line)
+            lines = inverted_lines
+        return lines
+
+    def is_cr_or_dr_in_tb(self):
+        object_settings = settings.OBJECT_SETTINGS[utils.get_source_name(self)]
+        if object_settings.get('is_tb_account_DR'):
+            return "DR"
+        if object_settings.get('is_tb_account_CR'):
+            return "CR"
+        return None
+
+    # ---
+
+    def make_lines(self, kwargs):
+        """
+        At this point:
+        - `lines` straight up added.
+        - `line`, `accounts` or `account` normalised to `lines`.
+        """
+
+        # 1. check if there are `lines` defined
+        kwargs['lines'] = None
+        if kwargs.get('lines'):
+            self.check_lines_equals_value(kwargs)
+        elif kwargs.get('account_DR') \
+                and kwargs.get('account_CR') \
+                and kwargs.get('value'):
+            kwargs['lines'] = self.process_line(
+                kwargs.get('account_DR'),
+                kwargs.get('account_CR'),
+                kwargs.get('value'))
+        else:
+            # Normalise `account`/`accounts`
+            if kwargs.get('accounts'):
+                accounts = self.process_accounts(
+                    kwargs.get('accounts'))
+            elif kwargs.get('account'):
+                accounts = self.process_account(
+                    kwargs.get('account'),
+                    kwargs.get('value'))
+            try:
+                # Convert `accounts` to `lines` (ie `accounts` + tb account)
+                accounts.append((
+                    self.get_tb_account(),
+                    utils.set_CR(self.get_lines_balance(accounts))))
+                kwargs['lines'] = accounts
+            except NameError:
+                # fails here if a condition for providing lines is not met.
+                raise Exception(
+                    "Lines/Accounts were not found in input: {}.".format(
+                        kwargs))
+
+        # now have a set of normalised lines.
+
+        # @@ TOOD: check tb account not added incorrectly
+        # @@ TOOD: protected reserved tb accounts?
+        # @@ TODO: allow multiple methods to be used?
+
+        # Process taxes
+        # In this early case, all thise means is checking that if GST
+        # is required, that it has been added.
+
+        # @@ TODO: Doesn't check IF tax should be included. Should explode.
+        kwargs = self.process_lines_tax(kwargs)
+
+        # Trial Balance DR/CR Correction
+        # This is confusing. Needs to be thoroughly checked.
+        # At this point `lines` are correct for subledger.
+        # Eg. - Increase in sales is positive.
+        #     - Additional expense is positive.
+        # Now fix `lines` to ensure correct +/- (dr/cr) for tb.
+        kwargs['lines'] = self.set_lines_sign(kwargs['lines'])
+
+        # check lines are OK.
+        if self.get_lines_balance(kwargs['lines']):
+            raise Exception(
+                "Lines do not balance to zero. Input: {}.".format(kwargs))
+
+        return kwargs['lines']
+
+    # ---
+    # Entry process specific utilities:
+
+    def get_required(self):
         required = set([x for x in settings.FIELDS_TRANSACTION_REQUIRED]
                        + [x for x in settings.OTHER_REQUIRED_FIELDS]
-                       + [x for x in settings.OBJECT_SETTINGS[object_name]
-                          ['required_fields']])
+                       + [x for x in settings.OBJECT_SETTINGS[
+                          utils.get_source_name(self)]['required_fields']])
         return required
 
     # This is now redundant.

@@ -14,9 +14,7 @@ def process_tax(cls, kwargs):
     - GST tb account being used
     - `GST total` column/ `gst_total` key in kwargs
     """
-
     object_settings = settings.OBJECT_SETTINGS
-    lines = kwargs['lines']
 
     # @@ TODO facilitate other taxes and surcharges.
     if object_settings.get('is_GST'):
@@ -28,7 +26,7 @@ def process_tax(cls, kwargs):
 
         # First check if GST_CR_ACCOUNT or GST_DR_ACCOUNT lines exist
         gst_allocated = False
-        for line in lines:
+        for line in kwargs['lines']:
             if Account.get_account(line[0]) == \
                Account.get_account(settings.GST_DR_ACCOUNT)\
                or Account.get_account(line[0]) == \
@@ -44,11 +42,11 @@ def process_tax(cls, kwargs):
             # note: correct GST account, abs value
             # fix dr/cr +/- in next process, not here.
             if object_settings.get('is_tb_account_DR'):
-                lines.append((
+                kwargs['lines'].append((
                     settings.GST_DR_ACCOUNT,
                     utils.make_decimal(kwargs['gst_total'])))
             if object_settings.get('is_tb_account_CR'):
-                lines.append((
+                kwargs['lines'].append((
                     settings.GST_CR_ACCOUNT,
                     utils.make_decimal(kwargs['gst_total'])))
-    return lines
+    return kwargs

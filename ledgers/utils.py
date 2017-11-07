@@ -32,7 +32,40 @@ def get_source(source):
 
 
 def get_source_name(source):
-    return source.split(".").last()
+    source = get_source(source)
+    return source.split(".")[-1]
+
+
+def get_cls(name):
+    """ Returns ModelObject.
+
+    Input variations (convert to source_str):
+    # 1. ModelObject or str.path to Model (per OBJECT_SETTINGS[source])
+    # 2. object_name -- valid vanilla name, eg "CreditorInvoice"
+    # 3. source_str
+    """
+
+    # 1. ModelObject
+    #    *or* str.path to Model (per OBJECT_SETTINGS[source])
+    try:
+        source = get_source(name)
+    except:
+        pass
+
+    # 2. object_name -- valid vanilla name, eg "CreditorInvoice"
+    try:
+        source = settings.OBJECT_SETTINGS[name]['source']
+    except:
+        pass
+
+    # check is a VALID_SOURCES and return
+    try:
+        if source in settings.VALID_SOURCES:
+            cls = import_string(source)
+            return cls
+    except UnboundLocalError:
+        raise Exception("No valid upload `type` {}.".format(name))
+    raise Exception("No valid `type` found for {}.".format(name))
 
 
 def make_date(value):
@@ -41,10 +74,10 @@ def make_date(value):
 
     Firmly enforce non-ambiguous date by Month as word eg: 2-May-2017.
     """
-    if type(value)==date:
+    if type(value) == date:
         return value
 
-    if type(value)==datetime:
+    if type(value) == datetime:
         return value
 
     month_as_word = re.sub(r'[^a-zA-Z.]', '', value)
@@ -55,6 +88,8 @@ def make_date(value):
 
 
 def make_decimal(value):
+    if value in ['', False, None]:
+        value = 0
     try:
         return round(Decimal(re.sub(r'[^\d\-.]', '', value)), 2)
     except TypeError:

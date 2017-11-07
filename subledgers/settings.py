@@ -84,7 +84,7 @@ SUBLEDGERS_AVAILABLE = {
 
 # `user` also, but considered separately
 
-OTHER_REQUIRED_FIELDS = ['object_name', 'cls', 'lines']
+OTHER_REQUIRED_FIELDS = ['lines']
 # manually add 'lines' to Transacton.save(lines=lines)
 
 FIELDS_TRANSACTION_REQUIRED = ['date', 'value', 'user', 'source']
@@ -105,6 +105,7 @@ Correctly defining CR/DR in subledgers is one of the most important aspects
 of the system therefore being as clear and explicit as possible.
 """
 OBJECT_SETTINGS = {
+
     'JournalEntry': {
         'relation_class': 'entities.models.Entity',
         'source': 'subledgers.journals.models.JournalEntry',
@@ -117,12 +118,31 @@ OBJECT_SETTINGS = {
         'required_fields': FIELDS_BANK_ENTRY_REQUIRED,
     },
 
+
     'Sale': {
         'source': 'subledgers.sales.models.Sale',
         'tb_account': SALES_CLEARING_ACCOUNT,
         'is_tb_account_DR': True,
         'required_fields': FIELDS_ENTRY_REQUIRED,
     },
+
+    # 'DebtorInvoice': {
+    #     'relation_class': 'subledgers.debtors.models.Debtor',
+    #     'source': 'subledgers.debtors.models.DebtorInvoice',
+    #     'tb_account': ACCOUNTS_RECEIVABLE_ACCOUNT,
+    #     'is_tb_account_DR': True,
+    #     'required_fields': FIELDS_INVOICE_REQUIRED,
+    # },
+
+    # 'DebtorPayment': {
+    #     'relation_class': 'subledgers.debtors.models.Debtor',
+    #     'source': 'subledgers.debtors.models.DebtorPayment',
+    #     'tb_account': ACCOUNTS_RECEIVABLE_ACCOUNT,
+    #     'is_tb_account_CR': True,
+    #     'required_fields': FIELDS_PAYMENT_REQUIRED,
+    # },
+
+
     'Expense': {
         'relation_class': 'entities.models.Entity',
         'source': 'subledgers.expenses.models.Expense',
@@ -139,6 +159,13 @@ OBJECT_SETTINGS = {
         'required_fields': FIELDS_INVOICE_REQUIRED,
     },
 
+    'CreditorPayment': {
+        'relation_class': 'subledgers.creditors.models.Creditor',
+        'source': 'subledgers.creditors.models.CreditorPayment',
+        'tb_account': ACCOUNTS_PAYABLE_ACCOUNT,
+        'is_tb_account_DR': True,
+        'required_fields': FIELDS_PAYMENT_REQUIRED,
+    },
 }
 
 VALID_SOURCES = [OBJECT_SETTINGS[obj_name]['source']

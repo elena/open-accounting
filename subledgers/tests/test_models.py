@@ -85,116 +85,12 @@ class TestModelEntryDRCR(TestCase):
         self.assertEqual(a, 'DR')
 
 
-class TestEntryMakeLines(TestCase):
 
     def setUp(self):
-        self.user = User.objects.create_user(
-            'test_staff_user', 'test@example.com', '1234')
-        self.user.is_staff = True
-        self.user.save()
-
         self.code = "ABC"
         self.entity = Entity.objects.create(name=self.code.lower())
         self.creditor = Creditor.objects.create(entity=self.entity)
 
-        self.a = Account.objects.create(
-            element='03', number='0300', name='ACP')
-        self.b = Account.objects.create(
-            element='01', number='0100', name='Bank 1')
-
-        self.a1 = Account.objects.create(
-            element='01', number='0450', name='Account 1')
-        self.a2 = Account.objects.create(
-            element='01', number='0709', name='Account 2')
-
-        self.kwargs = {
-            'date': '5-May-2020',
-            'user': self.user,
-        }
-
-    def test_get_lines_balance(self):
-        lines = [('01-0700', 1.00),
-                 ('01-0450', 1.00)]
-
-        self.assertEqual(
-            CreditorInvoice().get_lines_balance(lines), 2.00)
-
-    def test_input_accounts_fails(self):
-        kwargs = {
-            'accounts': [('01-0700', 1.00),
-                         ('01-0450', 1.00)]
-        }
-        k = {**kwargs, **self.kwargs}
-        self.assertRaises(Exception, CreditorInvoice().save_transaction, k)
-
-    def test_input_account_by_number(self):
-        kwargs = {
-            'account': '01-0450',
-            'value': 1.00,
-        }
-
-        k = {**kwargs, **self.kwargs}
-        CreditorInvoice().save_transaction(k)
-        self.assertEqual(1, 1)
-
-    def test_input_accounts_by_number(self):
-        kwargs = {
-            'accounts': [('01-0450', 1.00),
-                         ('01-0709', 1.00),
-                         ('01-0450', 1.00)]
-        }
-        k = {**kwargs, **self.kwargs}
-        CreditorInvoice().save_transaction(k)
-        self.assertEqual(1, 1)
-
-    def test_input_account_DR_CR_by_number(self):
-        kwargs = {
-            'account_DR': '01-0450',
-            'account_CR': self.a2,
-            'value': 1.00,
-        }
-        k = {**kwargs, **self.kwargs}
-        CreditorInvoice().save_transaction(k)
-        self.assertEqual(1, 1)
-
-    def test_input_account(self):
-        kwargs = {
-            'account': self.a1,
-            'value': 1.00,
-        }
-
-        k = {**kwargs, **self.kwargs}
-        CreditorInvoice().save_transaction(k)
-        self.assertEqual(1, 1)
-
-    def test_input_accounts(self):
-        kwargs = {
-            'accounts': [(self.a1, 1.00),
-                         (self.a1, 1.00),
-                         (self.a2, 1.00)]
-        }
-        k = {**kwargs, **self.kwargs}
-        CreditorInvoice().save_transaction(k)
-        self.assertEqual(1, 1)
-
-    def test_input_account_DR_CR(self):
-        kwargs = {
-            'account_DR': self.a1,
-            'account_CR': self.a2,
-            'value': 1.00,
-        }
-        k = {**kwargs, **self.kwargs}
-        CreditorInvoice().save_transaction(k)
-        self.assertEqual(1, 1)
-
-    def test_input_account_creditorpayment(self):
-        kwargs = {
-            'account': self.b,
-            'value': 5.00,
-        }
-        k = {**kwargs, **self.kwargs}
-        CreditorInvoice().save_transaction(k)
-        self.assertEqual(1, 1)
 
 
 class TestModelEntryCreateObjectJournal(TestCase):

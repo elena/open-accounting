@@ -16,9 +16,11 @@ def get_months(fyear):
 
 
 def get_source(source):
-    """ source is project model Class.
+    """ Returns string.
 
-    input class Object or string path
+    Provide ModelObject or str.path to Model
+
+    eg. as per OBJECT_SETTINGS[source] or 'subledgers.journals.JournalEntry'
 
     Returns consistent output to save as reference.
     """

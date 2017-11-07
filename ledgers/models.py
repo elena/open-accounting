@@ -161,8 +161,32 @@ class Transaction(models.Model):
     Setting as a BooleanField at save will add to DB size, but save transaction
     time later when  trying to view every `Transaction` balances without also
     processing every `Line`.
-    """
 
+    Example usage:
+
+        ```
+        from ledgers.models import Transaction
+        from ledgers.utils import get_source, make_date
+
+        # First create lines
+        account_DR = Account.objects.by_code('01-0100')
+        account_CR = Account.objects.by_code('03-0350')
+        value = 5.00
+        lines = (account_DR, account_CR, value)
+
+        # Create Transaction kwargs
+        kwargs = {
+            'user': request.user,
+            'date':  make_date(str(form.cleaned_data.get('date'))),
+            'source': get_source(BankLine)
+        }
+
+        # Create and save transaction with lines
+        new_transaction = Transaction(**kwargs)
+        new_transaction.save(lines=lines)
+        ```
+
+    """
     # ---
     # Minimum required fields for object.
 
@@ -204,6 +228,7 @@ class Transaction(models.Model):
     # Overwrite built-in Model methods
 
     def save(self, lines=None, *args, **kwargs):
+        # @@TODO: Fix `lines` usage. Should be cleverer. attr or something.
 
         if not self.pk and lines is None:
             """ New object check: Basic 'is adequate' to create check. """
@@ -217,6 +242,7 @@ lines = [(account, 1),
 
 new_transaction.save(lines)
 """)
+        # @@TODO pre_save hook or some other method may be better.
 
         if not self.pk:
             """ New objects: 'lines' input only works for NEW Transactions
@@ -251,7 +277,8 @@ new_transaction.save(lines)
         updated.
         """
         if self.lines.count() >= 2 \
-           and self.lines.aggregate(Sum('value'))['value__sum'] == decimal.Decimal(0):
+           and self.lines.aggregate(
+               Sum('value'))['value__sum'] == decimal.Decimal(0):
             return True
         return False
         # raise Exception('Transaction does not balance.')
@@ -287,7 +314,10 @@ Input should be:
  (account, 1, "Optional Note"),
  (account, -2),
  ...
-]""".format(data)
+]
+
+Beware of posting transactions upside-down!: DR first.
+        """.format(data)
 
         # case multiple:
         # basically matter of converting list/tuple to list kwargs

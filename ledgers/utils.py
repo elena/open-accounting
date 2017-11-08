@@ -49,20 +49,22 @@ def get_cls(name):
     #    *or* str.path to Model (per OBJECT_SETTINGS[source])
     try:
         source = get_source(name)
-    except:
+    except ImportError:
         pass
 
     # 2. object_name -- valid vanilla name, eg "CreditorInvoice"
     try:
-        source = settings.OBJECT_SETTINGS[name]['source']
-    except:
+        source = subledger_settings.OBJECT_SETTINGS[name]['source']
+    except KeyError:
         pass
 
     # check is a VALID_SOURCES and return
     try:
-        if source in settings.VALID_SOURCES:
+        if get_source(source) in subledger_settings.VALID_SOURCES:
             cls = import_string(source)
             return cls
+        else:
+            raise Exception("Not a VALID SOURCE `type` {}.".format(name))
     except UnboundLocalError:
         raise Exception("No valid upload `type` {}.".format(name))
     raise Exception("No valid `type` found for {}.".format(name))

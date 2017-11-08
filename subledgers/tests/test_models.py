@@ -43,9 +43,6 @@ class TestModelEntrySaveTransaction(TestCase):
             'value': 1.00,
         }
 
-        # 'account_DR': self.a1,
-        # 'account_CR': self.a2,
-
     def test_journalentry_save_transaction_account_code_passes(self):
 
         new_journalentry = JournalEntry()
@@ -99,6 +96,52 @@ class TestModelEntrySaveTransaction(TestCase):
             'transaction__date': utils.make_date('5-May-2020'),
             'transaction__user': self.user,
             'transaction__value': 1.00,
+            'transaction__source': utils.get_source(CreditorInvoice)
+        }
+        test_object = CreditorInvoice.objects.get(**test_kwargs)
+        self.assertEqual(new_creditorinvoice, test_object)
+
+    def test_creditorinvoice_save_transaction_accounts_passes(self):
+
+        self.kwargs = {
+            'date': '5-May-2020',
+            'user': self.user,
+            'accounts': [(self.a1, 1), (self.a2, 2)],
+        }
+        self.kwargs['invoice_number'] = 'abc123'
+        self.kwargs['relation'] = self.creditor
+        self.kwargs['gst_total'] = 0
+        new_creditorinvoice = CreditorInvoice()
+        new_creditorinvoice.save_transaction(self.kwargs)
+        test_kwargs = {
+            'transaction__date': utils.make_date('5-May-2020'),
+            'transaction__user': self.user,
+            'transaction__value': 3.00,
+            'transaction__source': utils.get_source(CreditorInvoice)
+        }
+        test_object = CreditorInvoice.objects.get(**test_kwargs)
+        self.assertEqual(new_creditorinvoice, test_object)
+
+    def test_creditorinvoice_save_transaction_lines_passes(self):
+
+        self.kwargs = {
+            'date': '5-May-2020',
+            'user': self.user,
+            'lines': [
+                (self.a1, 1),
+                (self.a2, 2),
+                (self.c, -3)
+            ],
+        }
+        self.kwargs['invoice_number'] = 'abc123'
+        self.kwargs['relation'] = self.creditor
+        self.kwargs['gst_total'] = 0
+        new_creditorinvoice = CreditorInvoice()
+        new_creditorinvoice.save_transaction(self.kwargs)
+        test_kwargs = {
+            'transaction__date': utils.make_date('5-May-2020'),
+            'transaction__user': self.user,
+            'transaction__value': 3.00,
             'transaction__source': utils.get_source(CreditorInvoice)
         }
         test_object = CreditorInvoice.objects.get(**test_kwargs)

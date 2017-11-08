@@ -113,9 +113,9 @@ class Entry(models.Model):
         new_creditorinvoice = CreditorInvoice()
         new_creditorinvoice.save_transaction(kwargs)
         """
-        try:
-            lines, trans_kwargs, obj_kwargs = self.make_dicts(kwargs)
+        lines, trans_kwargs, obj_kwargs = self.make_dicts(kwargs)
 
+        try:
             # Note: self(**obj_kwargs) does not work in this case.
             for key in obj_kwargs:
                 setattr(self, key, kwargs[key])
@@ -132,83 +132,32 @@ class Entry(models.Model):
             print("Error {}. Keys provided: {}".format(e, ", ".join(
                 obj_kwargs)))
 
-            """ This line exists to ensure `Transaction` objects are not
-            created if there is a validation problem with the `Entry`, as
-            `Transaction` must be created before `Entry`.
-
-            This is important for system integrity, until there is some
-            generic relation from `Transaction` that we can ensure exists.
-
-            # @@ TODO: This important integrity check needs to be done
-            better.
-
-            This should nearly certainly be done as post_save signal
-            on Entry. taiga#122
-            """
-            self_trans.delete()
             return "Error {}: {}".format(e, ", ".join(kwargs))
 
     def get_object_settings(self):
         return settings.OBJECT_SETTINGS[utils.get_source_name(self)]
 
-    # ---
-    # Lines processing methods:
+    def get_relation(self, data):
 
-    def process_account(self, account, val):
-        """ If only account is provided, retrieve tb account. """
-        return [(Account.get_account(account), utils.set_DR(val))]
+        RelationCls = import_string(
+            self.get_object_settings()['relation_class'])
 
-    def process_accounts(self, accounts):
-        lines = []
-        for account, val in accounts:
-            # Note use of [0], .process_account return list
-            lines.append(self.process_account(account, val)[0])
-        return lines
+        if isinstance(data, RelationCls):
+            return data
 
-    def process_line(self, account_DR, account_CR, val):
-        return [(Account.get_account(account_DR), utils.set_DR(val)),
-                (Account.get_account(account_CR), utils.set_CR(val))]
+        elif RelationCls is Entity:
+            return Entity.objects.get(code=data)
+        else:
+            return RelationCls.objects.get(entity__code=data)
 
-    def process_lines_tax(self, kwargs, local=None):
-        # Process tax
-        # BEFORE set_lines_sign
-        # @@ TODO: set country better, should be a setting somewhere probably
-        if not local:
-            local = 'AU'
-        taxes_utils = import_module('subledgers.taxes.{}.utils'.format(local))
-        lines = taxes_utils.process_tax(self, kwargs)
-        return lines
-
-    def check_lines_equals_value(self, kwargs):
-        balance = self.get_balance_lines(kwargs['lines'])
-        if kwargs.get('value') and\
-           not Decimal(kwargs.get('value')) == abs(Decimal(balance)):
-            raise Exception('Value provide ({}) does not equal remaining balance: {}'.format(kwargs['value'], bal))  # noqa
-        return True
-
-    def get_lines_balance(self, lines):
-        balance = 0
-        for i, line in enumerate(lines):
-            balance += line[1]
-        return balance
+        raise Exception("{} with code {} doesn't exist.".format(
+            type(RelationCls), data))
 
     def get_tb_account(self):
         object_settings = self.get_object_settings()
         if object_settings.get('tb_account'):
             return Account.get_account(object_settings.get('tb_account'))
         raise Exception("No trial balance account for {}".format(self))
-
-    def set_lines_sign(self, lines):
-        # invert signs if DR
-        if self.is_cr_or_dr_in_tb() == 'DR':
-            inverted_lines = []
-            for line in lines:
-                inverted_line = (line[0], line[1])
-                if len(line) == 3:  # if there is a `note`
-                    inverted_line = inverted_line + line[2]
-                inverted_lines.append(inverted_line)
-            lines = inverted_lines
-        return lines
 
     def is_cr_or_dr_in_tb(self):
         object_settings = self.get_object_settings()
@@ -219,6 +168,109 @@ class Entry(models.Model):
         return None
 
     # ---
+    # ** Make Dicts **
+
+    def make_dicts(self, input_kwargs):
+        # Convert kwargs to dictionaries to create objects.
+
+        kwargs = self.process_kwargs(input_kwargs)
+        trans_kwargs, obj_kwargs = {}, {}
+
+        # cherry-pick transaction kwargs from dir
+        for attr in dir(Transaction):
+            if kwargs.get(attr) and not attr == 'lines':
+                trans_kwargs[attr] = kwargs.get(attr)
+
+        # cherry-pick obj kwargs from dir
+        for attr in dir(type(self)):
+            if kwargs.get(attr):
+                obj_kwargs[attr] = kwargs.get(attr)
+
+        # @@TODO Should make_lines go here or in self.process_kwargs?
+        lines = self.make_lines(kwargs)
+
+        return (lines, trans_kwargs, obj_kwargs)
+
+    # ---
+    # Make Dicts processing methods:
+
+    def get_required(self):
+        required = set([
+            x for x in settings.FIELDS_TRANSACTION_REQUIRED]
+            + [x for x in self.get_object_settings()['required_fields']])
+        return required
+
+    def check_required(self, kwargs):
+        # Basically check all required fields exist in kwargs.
+        required_fields = self.get_required()
+        for key, value in kwargs.items():
+            if key in settings.FIELD_IS_RELATION:
+                try:
+                    required_fields.remove('relation')
+                except KeyError:
+                    pass
+            if key in required_fields:
+                required_fields.remove(key)
+                if kwargs[key] is None:
+                    raise Exception("{} ** Missing value: {}".format(
+                        kwargs, key))
+
+        # there shouldn't be any required fields left
+        if not required_fields:
+            return (True, None)
+        else:
+            return (False, required_fields)
+
+    def process_kwargs(self, kwargs):
+        """
+        Minimum keys assumed included: 'user', 'date', 'lines'
+
+        1. Keys added (if not already defined): 'cls', 'source'
+             add `source` using ledgers.utils.get_source(`Model`)
+             based upon `Model` provided in object settings
+
+        2. Keys checked: 'relation', dates, decimals, required fields
+             IS_DATE using dateparser.parse
+             IS_DECIMAL using ledgers.utils.make_decimal()
+             IS_RELATION to normalise relation field name
+
+        3. Create dicts: (obj_kwargs, trans_kwargs)
+
+        Check all required fields are represented (or explode)
+             append `row_dict` set to `list_kwargs`
+        """
+
+        # Check to see if these kwargs have been run previously.
+        # This is bypassing all the heavy-lifting.
+        if not self.check_required(kwargs)[0]:
+
+            # If `cls` not manually described in kwargs.
+            kwargs['source'] = utils.get_source(self)
+
+            for key in kwargs:
+                if key in settings.FIELD_IS_DATE:
+                    kwargs[key] = utils.make_date(kwargs[key])
+                if key in settings.FIELD_IS_DECIMAL:
+                    kwargs[key] = utils.make_decimal(kwargs[key])
+                if key in settings.FIELD_IS_RELATION:
+                    # Relation names are not always consistently used.
+                    # eg. Creditor, Relation
+                    if kwargs[key] is None:
+                        # Is likely to have emtpy relation column heading.
+                        # Remove empty relation, so doesn't blow up save.
+                        kwargs.pop(key)
+                    else:
+                        kwargs['relation'] = self.get_relation(kwargs[key])
+
+            has_all_required = self.check_required(kwargs)
+            if not has_all_required[0]:
+                raise Exception("Missing field/s: {}".format(
+                    ", ".join(has_all_required[1])))
+
+        return kwargs
+
+    # ---
+    # ** Make Lines **
 
     def make_lines(self, kwargs):
         """
@@ -234,22 +286,21 @@ class Entry(models.Model):
 
         4. add `lines` back to `kwargs`
         """
-
-        # 1. check if there are `lines` defined
-
         lines = None
         if kwargs.get('lines'):
+            # Prioritise `lines` if defined in kwargs
             self.check_lines_equals_value(kwargs)
-
+            lines = kwargs['lines']
         elif kwargs.get('account_DR') \
                 and kwargs.get('account_CR') \
                 and kwargs.get('value'):
+            # Next try `account_DR`, `account_CR`, `value` combination
             lines = self.process_line(
                 kwargs.get('account_DR'),
                 kwargs.get('account_CR'),
                 kwargs.get('value'))
         else:
-            # Normalise `account`/`accounts`
+            # Next try normalising `account`/`accounts`
             if kwargs.get('accounts'):
                 accounts = self.process_accounts(
                     kwargs.get('accounts'))
@@ -269,7 +320,7 @@ class Entry(models.Model):
                     "Lines/Accounts were not found in input: {}.".format(
                         kwargs))
 
-        # now have a set of normalised lines.
+        # Should now have a set of normalised lines.
 
         # @@ TOOD: check tb account not added incorrectly
         # @@ TOOD: protected reserved tb accounts?
@@ -280,7 +331,7 @@ class Entry(models.Model):
         # is required, that it has been added.
 
         # @@ TODO: Doesn't check IF tax should be included. Should explode.
-        kwargs = self.process_lines_tax(kwargs)
+        lines = self.process_lines_tax(kwargs, lines)
 
         # Trial Balance DR/CR Correction
         # This is confusing. Needs to be thoroughly checked.
@@ -298,110 +349,57 @@ class Entry(models.Model):
         return lines
 
     # ---
-    # Dicts processing methods:
+    # Lines processing methods:
 
-    def get_required(self):
-        required = set([
-            x for x in settings.FIELDS_TRANSACTION_REQUIRED]
-            + [x for x in settings.OTHER_REQUIRED_FIELDS]
-            + [x for x in self.get_object_settings()['required_fields']])
-        return required
+    def process_account(self, account, val):
+        """ If only account is provided, retrieve tb account. """
+        return [(Account.get_account(account), utils.set_DR(val))]
 
-    def check_required(self, kwargs):
-        required_fields = self.get_required()
-        for key, value in kwargs.items():
-            if key in settings.FIELD_IS_RELATION:
-                try:
-                    required_fields.remove('relation')
-                except KeyError:
-                    pass
-            if key in required_fields:
-                required_fields.remove(key)
-                if kwargs[key] is None:
-                    raise Exception("{} ** Missing value: {}".format(
-                        kwargs, key))
+    def process_accounts(self, accounts):
+        lines = []
+        for account, val in accounts:
+            # Note use of [0], .process_account return list
+            lines.append(self.process_account(account, val)[0])
+        return lines
 
-        # there shouldn't be any required fields left
-        if required_fields:
-            raise Exception("Missing field/s: {}".format(
-                ", ".join(required_fields)))
-        else:
-            return True
+    def process_line(self, account_DR, account_CR, val):
+        return [(Account.get_account(account_DR), utils.set_DR(val)),
+                (Account.get_account(account_CR), utils.set_CR(val))]
 
-    def get_relation(self, data):
+    def process_lines_tax(self, kwargs, lines, local=None):
+        # Process tax
+        # BEFORE set_lines_sign
+        # @@ TODO: set country better, should be a setting somewhere probably
+        if not local:
+            local = 'AU'
+        taxes_utils = import_module('subledgers.taxes.{}.utils'.format(local))
+        lines = taxes_utils.process_tax(self, kwargs, lines)
+        return lines
 
-        RelationCls = import_string(
-            self.get_object_settings()['relation_class'])
+    def get_lines_balance(self, lines):
+        balance = 0
+        for i, line in enumerate(lines):
+            balance += line[1]
+        return balance
 
-        if isinstance(data, RelationCls):
-            return data
+    def set_lines_sign(self, lines):
+        # invert signs if DR
+        if self.is_cr_or_dr_in_tb() == 'DR':
+            inverted_lines = []
+            for line in lines:
+                inverted_line = (line[0], line[1])
+                if len(line) == 3:  # if there is a `note`
+                    inverted_line = inverted_line + line[2]
+                inverted_lines.append(inverted_line)
+            lines = inverted_lines
+        return lines
 
-        elif RelationCls is Entity:
-            return Entity.objects.get(code=data)
-        else:
-            return RelationCls.objects.get(entity__code=data)
-
-        raise Exception("{} with code {} doesn't exist.".format(
-            type(RelationCls), data))
-
-    def make_dicts(self, input_kwargs):
-        """
-        Minimum keys assumed included: 'user', 'date', 'lines'
-
-        1. Keys added (if not already defined): 'cls', 'source'
-             add `source` using ledgers.utils.get_source(`Model`)
-             based upon `Model` provided in object settings
-
-        2. Keys checked: 'relation', dates, decimals, required fields
-             IS_DATE using dateparser.parse
-             IS_DECIMAL using ledgers.utils.make_decimal()
-             IS_RELATION to normalise relation field name
-
-        3. Create dicts: (obj_kwargs, trans_kwargs)
-
-        Check all required fields are represented (or explode)
-             append `row_dict` set to `list_kwargs`
-        """
-
-        # Copy kwargs for safety to ensure valid set/uniform keys
-        kwargs = {k.lower(): v for k, v in input_kwargs.items()}
-
-        # If `cls` not manually described in kwargs.
-        kwargs['source'] = utils.get_source(self)
-
-        for key in kwargs:
-            if key in settings.FIELD_IS_DATE:
-                kwargs[key] = utils.make_date(kwargs[key])
-            if key in settings.FIELD_IS_DECIMAL:
-                kwargs[key] = utils.make_decimal(kwargs[key])
-            if key in settings.FIELD_IS_RELATION:
-                # Relation names are not always consistently used.
-                # eg. Creditor, Relation
-                if kwargs[key] is None:
-                    # Is likely to have emtpy relation column heading.
-                    # Remove empty relation, so doesn't blow up save.
-                    kwargs.pop(key)
-                else:
-                    kwargs['relation'] = self.get_relation(kwargs[key])
-
-        kwargs['lines'] = lines = self.make_lines(kwargs)
-
-        # Basically check all required fields exist in kwargs.
-        self.check_required(kwargs)
-
-        trans_kwargs, obj_kwargs = {}, {}
-
-        # cherry-pick transaction kwargs from dir
-        for attr in dir(Transaction) + ['lines']:
-            if kwargs.get(attr):
-                trans_kwargs[attr] = kwargs.get(attr)
-
-        # cherry-pick obj kwargs from dir
-        for attr in dir(type(self)):
-            if kwargs.get(attr):
-                obj_kwargs[attr] = kwargs.get(attr)
-
-        return (lines, trans_kwargs, obj_kwargs)
+    def check_lines_equals_value(self, kwargs):
+        balance = self.get_lines_balance(kwargs['lines'])
+        if kwargs.get('value') and\
+           not Decimal(kwargs.get('value')) == abs(Decimal(balance)):
+            raise Exception('Value provide ({}) does not equal remaining balance: {}'.format(kwargs['value'], balance))  # noqa
+        return True
 
 
 class Invoice(Entry):
@@ -446,6 +444,7 @@ class Invoice(Entry):
         abstract = True
 
     def is_cr_or_dr_in_tb(self):
+        # override `Entry.is_cr_or_dr_in_tb` based upon self.is_credit
         # If is credit, do the CR/DR opposite:
         if self.is_credit:
             object_settings = self.get_object_settings()

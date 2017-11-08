@@ -84,12 +84,9 @@ SUBLEDGERS_AVAILABLE = {
 
 # `user` also, but considered separately
 
-OTHER_REQUIRED_FIELDS = ['lines']
-# manually add 'lines' to Transacton.save(lines=lines)
+FIELDS_TRANSACTION_REQUIRED = ['date', 'user', 'source']
 
-FIELDS_TRANSACTION_REQUIRED = ['date', 'value', 'user', 'source']
-
-FIELDS_ENTRY_REQUIRED = []
+FIELDS_ENTRY_REQUIRED = ['value']
 FIELDS_BANK_ENTRY_REQUIRED = ['bank_transaction_id']
 FIELDS_PAYMENT_REQUIRED = ['relation', 'bank_transaction_id']
 FIELDS_INVOICE_REQUIRED = ['invoice_number', 'gst_total', 'relation']

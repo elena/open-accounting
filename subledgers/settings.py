@@ -104,13 +104,13 @@ of the system therefore being as clear and explicit as possible.
 OBJECT_SETTINGS = {
 
     'JournalEntry': {
-        'relation_class': 'entities.models.Entity',
         'source': 'subledgers.journals.models.JournalEntry',
+        'relation_class': 'entities.models.Entity',
         'required_fields': FIELDS_ENTRY_REQUIRED,
     },
     'BankEntry': {
-        'relation_class': False,
         'source': 'subledgers.bank_reconciliations.models.BankEntry',
+        'relation_class': False,
         'is_tb_account_CR': True,
         'required_fields': FIELDS_BANK_ENTRY_REQUIRED,
     },
@@ -141,24 +141,24 @@ OBJECT_SETTINGS = {
 
 
     'Expense': {
-        'relation_class': 'entities.models.Entity',
         'source': 'subledgers.expenses.models.Expense',
+        'relation_class': 'entities.models.Entity',
         'tb_account': EXPENSE_CLEARING_ACCOUNT,
         'is_tb_account_CR': True,
         'required_fields': FIELDS_ENTRY_REQUIRED,
     },
 
     'CreditorInvoice': {
-        'relation_class': 'subledgers.creditors.models.Creditor',
         'source': 'subledgers.creditors.models.CreditorInvoice',
+        'relation_class': 'subledgers.creditors.models.Creditor',
         'tb_account': ACCOUNTS_PAYABLE_ACCOUNT,
         'is_tb_account_CR': True,
         'required_fields': FIELDS_INVOICE_REQUIRED,
     },
 
     'CreditorPayment': {
-        'relation_class': 'subledgers.creditors.models.Creditor',
         'source': 'subledgers.creditors.models.CreditorPayment',
+        'relation_class': 'subledgers.creditors.models.Creditor',
         'tb_account': ACCOUNTS_PAYABLE_ACCOUNT,
         'is_tb_account_DR': True,
         'required_fields': FIELDS_PAYMENT_REQUIRED,

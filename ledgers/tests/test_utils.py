@@ -90,6 +90,21 @@ class TestUtilsMakeDecimal(TestCase, unittest.TestCase):
         test_result = Decimal('5.00')
         self.assertEqual(utils.make_decimal(test_input), test_result)
 
+    def test_make_decimal_neg_passes(self):
+        test_input = -5
+        test_result = Decimal('-5.00')
+        self.assertEqual(utils.make_decimal(test_input), test_result)
+
+    def test_make_decimal_neg_Dec_passes(self):
+        test_input = Decimal(-5)
+        test_result = Decimal('-5.00')
+        self.assertEqual(utils.make_decimal(test_input), test_result)
+
+    def test_make_decimal_neg_str_passes(self):
+        test_input = '-5'
+        test_result = Decimal('-5.00')
+        self.assertEqual(utils.make_decimal(test_input), test_result)
+
     def test_make_decimal_str_alpha_failure(self):
         test_input = "asdf"
         self.assertRaises(Exception, utils.make_decimal, test_input)

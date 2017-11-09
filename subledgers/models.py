@@ -40,18 +40,13 @@ class Entry(models.Model):
         ordering = ['transaction__date']
 
     def __str__(self):
-        try:
-            return "{} [{}]-- ${} ".format(self.relation.entity.code,
-                                           self.transaction.date,
-                                           self.transaction.value)
-        except (AttributeError, ValueError):
-            if self.transaction.note:
-                return "{} -- ${} -- {}".format(self.transaction.date,
-                                                self.transaction.value,
-                                                self.transaction.note)
-            else:
-                return "{} -- ${}".format(self.transaction.date,
-                                          self.transaction.value)
+        if self.transaction.note:
+            return "{} -- ${} -- {}".format(self.transaction.date,
+                                            self.transaction.value,
+                                            self.transaction.note)
+        else:
+            return "{} -- ${}".format(self.transaction.date,
+                                      self.transaction.value)
 
     # Entry specific utilities:
 
@@ -115,22 +110,38 @@ class Entry(models.Model):
         """
         lines, trans_kwargs, obj_kwargs = self.make_dicts(kwargs)
 
-        try:
-            # Note: self(**obj_kwargs) does not work in this case.
-            for key in obj_kwargs:
-                setattr(self, key, kwargs[key])
+        if 'relation' in obj_kwargs:
+            relation = obj_kwargs.pop('relation')
 
+        # Note: self(**obj_kwargs) does not work in this case.
+        for key in obj_kwargs:
+            setattr(self, key, kwargs[key])
+
+        # @@ TODO not sure why relation has to be removed and then re-added
+        # but it works now after bit of agony and confusion. Explore this.
+        if 'relation' in locals():
+            self.relation = relation
+
+        self_transaction = Transaction(**trans_kwargs)
+
+        try:
             if live:
-                self_transaction = Transaction(**trans_kwargs)
                 self_transaction.save(lines=lines)
                 self.transaction = self_transaction
-                self.save()
+                self.save(force_insert=True)
+                return self
             else:
-                return "Pass!: {}: {}".format(self, obj_kwargs)
-
+                print("Pass!: {}: {}".format(self, obj_kwargs))
+                return kwargs
         except Exception as e:
             print("Error {}. Keys provided: {}".format(e, ", ".join(
                 obj_kwargs)))
+            try:
+                # Delete transaction if created so not to pollute.
+                # @@ TODO save signals
+                self_transaction.delete()
+            except NameError:
+                pass
 
             return "Error {}: {}".format(e, ", ".join(kwargs))
 
@@ -144,9 +155,11 @@ class Entry(models.Model):
 
         if isinstance(data, RelationCls):
             return data
-
         elif RelationCls is Entity:
-            return Entity.objects.get(code=data)
+            try:
+                return Entity.objects.get(code=data)
+            except Entity.DoesNotExist:
+                return None
         else:
             return RelationCls.objects.get(entity__code=data)
 
@@ -156,8 +169,12 @@ class Entry(models.Model):
     def get_tb_account(self):
         object_settings = self.get_object_settings()
         if object_settings.get('tb_account'):
-            return Account.get_account(object_settings.get('tb_account'))
-        raise Exception("No trial balance account for {}".format(self))
+            try:
+                return Account.get_account(object_settings.get('tb_account'))
+            except Exception:
+                raise Exception("No trial balance account for {}".format(self))
+        else:
+            return False
 
     def is_cr_or_dr_in_tb(self):
         object_settings = self.get_object_settings()
@@ -203,6 +220,7 @@ class Entry(models.Model):
     def check_required(self, kwargs):
         # Basically check all required fields exist in kwargs.
         required_fields = self.get_required()
+
         for key, value in kwargs.items():
             if key in settings.FIELD_IS_RELATION:
                 try:
@@ -216,10 +234,11 @@ class Entry(models.Model):
                         kwargs, key))
 
         # there shouldn't be any required fields left
-        if not required_fields:
-            return (True, None)
+        if required_fields:
+            raise Exception(
+                "Missing field/s: {}".format(", ".join(required_fields)))
         else:
-            return (False, required_fields)
+            return True
 
     def process_kwargs(self, kwargs):
         """
@@ -240,34 +259,39 @@ class Entry(models.Model):
              append `row_dict` set to `list_kwargs`
         """
 
-        # Check to see if these kwargs have been run previously.
-        # This is bypassing all the heavy-lifting.
-        if not self.check_required(kwargs)[0]:
+        # Generate list of codes to check against.
+        # Cheaper than checking db for every account.
+        ACCOUNT_CODE_LIST = Account.get_account_code_list()
 
-            # If `cls` not manually described in kwargs.
-            kwargs['source'] = utils.get_source(self)
+        process_kwargs = {k.lower(): v for k, v in kwargs.items()}
 
-            for key in kwargs:
-                if key in settings.FIELD_IS_DATE:
-                    kwargs[key] = utils.make_date(kwargs[key])
-                if key in settings.FIELD_IS_DECIMAL:
-                    kwargs[key] = utils.make_decimal(kwargs[key])
-                if key in settings.FIELD_IS_RELATION:
-                    # Relation names are not always consistently used.
-                    # eg. Creditor, Relation
-                    if kwargs[key] is None:
-                        # Is likely to have emtpy relation column heading.
-                        # Remove empty relation, so doesn't blow up save.
-                        kwargs.pop(key)
-                    else:
-                        kwargs['relation'] = self.get_relation(kwargs[key])
+        # If `cls` not manually described in kwargs.
+        process_kwargs['source'] = utils.get_source(self)
 
-            has_all_required = self.check_required(kwargs)
-            if not has_all_required[0]:
-                raise Exception("Missing field/s: {}".format(
-                    ", ".join(has_all_required[1])))
+        for key in kwargs:
+            if key in settings.FIELD_IS_DATE:
+                process_kwargs[key] = utils.make_date(kwargs[key])
 
-        return kwargs
+            if key in settings.FIELD_IS_DECIMAL:
+                process_kwargs[key] = utils.make_decimal(kwargs[key])
+
+            if key in settings.FIELD_IS_RELATION:
+                # Relation names are not always consistently used.
+                # eg. Creditor, Relation
+                if kwargs[key] is None:
+                    # Is likely to have emtpy relation column heading.
+                    # Remove empty relation, so doesn't blow up save.
+                    process_kwargs.pop(key)
+                else:
+                    process_kwargs['relation'] = self.get_relation(kwargs[key])
+
+            if key in ACCOUNT_CODE_LIST:
+                process_kwargs.setdefault(
+                    'accounts', []).append((key, kwargs[key]))
+
+        self.check_required(process_kwargs)
+
+        return process_kwargs
 
     # ---
     # ** Make Lines **
@@ -286,20 +310,33 @@ class Entry(models.Model):
 
         4. add `lines` back to `kwargs`
         """
-        lines = None
+        lines = ()
         if kwargs.get('lines'):
+
+            # Lines are completely manual.
+            # Should never be used by 'standard' subledgers:
+            # Debtor/Creditor, Sales/Expense
+
             # Prioritise `lines` if defined in kwargs
             self.check_lines_equals_value(kwargs)
             lines = kwargs['lines']
-        elif kwargs.get('account_DR') \
-                and kwargs.get('account_CR') \
+        elif kwargs.get('account_dr') \
+                and kwargs.get('account_cr') \
                 and kwargs.get('value'):
             # Next try `account_DR`, `account_CR`, `value` combination
+            # should be lowercase
             lines = self.process_line(
-                kwargs.get('account_DR'),
-                kwargs.get('account_CR'),
+                kwargs.get('account_dr'),
+                kwargs.get('account_cr'),
                 kwargs.get('value'))
-        else:
+            # Next check for `inlines_accounts`
+        elif kwargs.get('accounts') or kwargs.get('account'):
+
+            # Accounts should *always* be used by 'standard' subledgers:
+            # Debtor/Creditor, Sales/Expense
+            # @@ TODO formalise 'standard' subledgers use of `accounts`
+            # rather than `lines`
+
             # Next try normalising `account`/`accounts`
             if kwargs.get('accounts'):
                 accounts = self.process_accounts(
@@ -308,30 +345,35 @@ class Entry(models.Model):
                 accounts = self.process_account(
                     kwargs.get('account'),
                     kwargs.get('value'))
-            try:
-                # Convert `accounts` to `lines` (ie `accounts` + tb account)
+
+            # Check tax on 'standard' subledgers only.
+            # Should be done before tb account is added.
+
+            # In this early case, all thise means is checking that if GST
+            # is required, that it has been added.
+
+            # @@ TODO: Doesn't check IF tax should be included.
+            # Should explode as necessary.
+            accounts = self.process_lines_tax(kwargs, accounts)
+
+            # Convert `accounts` to `lines` (ie `accounts` + tb account)
+            if self.get_tb_account():
                 accounts.append((
                     self.get_tb_account(),
                     utils.set_CR(self.get_lines_balance(accounts))))
-                lines = accounts
-            except NameError:
-                # fails here if a condition for providing lines is not met.
-                raise Exception(
-                    "Lines/Accounts were not found in input: {}.".format(
-                        kwargs))
+
+            lines = accounts
+        else:
+            # fails here if a condition for providing lines is not met.
+            raise Exception(
+                "Lines/Accounts were not found in input: {}.".format(
+                    kwargs))
 
         # Should now have a set of normalised lines.
 
         # @@ TOOD: check tb account not added incorrectly
         # @@ TOOD: protected reserved tb accounts?
         # @@ TODO: allow multiple methods to be used?
-
-        # Process taxes
-        # In this early case, all thise means is checking that if GST
-        # is required, that it has been added.
-
-        # @@ TODO: Doesn't check IF tax should be included. Should explode.
-        lines = self.process_lines_tax(kwargs, lines)
 
         # Trial Balance DR/CR Correction
         # This is confusing. Needs to be thoroughly checked.
@@ -353,7 +395,8 @@ class Entry(models.Model):
 
     def process_account(self, account, val):
         """ If only account is provided, retrieve tb account. """
-        return [(Account.get_account(account), utils.set_DR(val))]
+        return [(Account.get_account(account),
+                 utils.set_DR(utils.make_decimal(val)))]
 
     def process_accounts(self, accounts):
         lines = []
@@ -363,13 +406,15 @@ class Entry(models.Model):
         return lines
 
     def process_line(self, account_DR, account_CR, val):
-        return [(Account.get_account(account_DR), utils.set_DR(val)),
-                (Account.get_account(account_CR), utils.set_CR(val))]
+        return [(Account.get_account(account_DR),
+                 utils.set_DR(utils.make_decimal(val))),
+                (Account.get_account(account_CR),
+                 utils.set_CR(utils.make_decimal(val)))]
 
     def process_lines_tax(self, kwargs, lines, local=None):
-        # Process tax
-        # BEFORE set_lines_sign
+        # Process tax BEFORE set_lines_sign
         # @@ TODO: set country better, should be a setting somewhere probably
+
         if not local:
             local = 'AU'
         taxes_utils = import_module('subledgers.taxes.{}.utils'.format(local))
@@ -383,11 +428,16 @@ class Entry(models.Model):
         return balance
 
     def set_lines_sign(self, lines):
-        # invert signs if DR
+
+        # Invert signs if DR in tb
+        # (as if DR in tb, is invert of native display
+        #  eg. Sale $5 >> positive in subledger BUT sb positive in TB.
+        #  default is offset $5, just need to be reversed for lines/gl/tb.)
+
         if self.is_cr_or_dr_in_tb() == 'DR':
             inverted_lines = []
             for line in lines:
-                inverted_line = (line[0], line[1])
+                inverted_line = (line[0], -line[1])
                 if len(line) == 3:  # if there is a `note`
                     inverted_line = inverted_line + line[2]
                 inverted_lines.append(inverted_line)
@@ -443,15 +493,29 @@ class Invoice(Entry):
     class Meta:
         abstract = True
 
+    def __str__(self):
+        try:
+            return "{} [{}]-- ${} ".format(self.relation.entity.code,
+                                           self.transaction.date,
+                                           self.transaction.value)
+        except (AttributeError, ValueError):
+            if self.transaction.note:
+                return "{} -- ${} -- {}".format(self.transaction.date,
+                                                self.transaction.value,
+                                                self.transaction.note)
+            else:
+                return "{} -- ${}".format(self.transaction.date,
+                                          self.transaction.value)
+
     def is_cr_or_dr_in_tb(self):
         # override `Entry.is_cr_or_dr_in_tb` based upon self.is_credit
         # If is credit, do the CR/DR opposite:
         if self.is_credit:
             object_settings = self.get_object_settings()
             if object_settings.get('is_tb_account_DR'):
-                return "CR"
+                return "CR"  # reverse credit
             if object_settings.get('is_tb_account_CR'):
-                return "DR"
+                return "DR"  # reverse credit
         else:
             return super(Invoice, self).is_cr_or_dr_in_tb()
 

@@ -97,6 +97,11 @@ class Account(models.Model):
         return "{element}-{number:0>4}".format(element=self.element,
                                                number=self.number)
 
+    def get_account_code_list():
+        return [account.get_code() for account in Account.objects.all()] \
+            + ["[{}]".format(account.get_code())
+               for account in Account.objects.all()]
+
     def get_account(data):
         """ Allow fetch `Account` by either string of "code" or Account obj"""
 

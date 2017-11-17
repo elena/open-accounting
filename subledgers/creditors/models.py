@@ -26,6 +26,28 @@ class Creditor(Relation):
         return self.entity.name
 
 
+    def invoices_aged(self):
+        qs = self.creditorinvoice_set.all()
+        aged = {x: "" for x in AGED_PERIODS}
+        per_day1 = date.today()
+        for period in AGED_PERIODS:
+            if period == AGED_PERIODS[-1]:
+                total = qs.filter(
+                    transaction__date__lte=date.today() - timedelta(
+                        days=AGED_PERIODS[-1])).aggregate(
+                    period_total=models.Sum("transaction__value"))
+                print(total)
+            else:
+                per_day2 = date.today() - timedelta(days=period)
+                print(per_day1, per_day2)
+                total = qs.filter(
+                    transaction__date__lt=per_day1,
+                    transaction__date__gt=per_day2).aggregate(
+                        period_total=models.Sum("transaction__value"))
+                per_day1 = per_day2 + timedelta(days=1)
+            aged[period] = total['period_total']
+
+        return aged
 
 
 class CreditorAccount(models.Model):
@@ -57,11 +79,25 @@ class CreditorInvoice(SpecificRelation, Invoice):
     """ `Invoice` is `Entry` that has more details. """
 
     class Meta:
+        ordering = ['transaction__date']
+        unique_together = ("invoice_number", "relation")
+
     def __str__(self):
         return "[{}] {} -- {} -- ${} [outstanding: ${}]".format(
             self.relation.entity.code, self.transaction.date,
             self.invoice_number, self.transaction.value,
             self.unpaid)
+
+    def save(self, *args, **kwargs):
+
+        # Set unpaid value
+        # @@ TODO This can be done better.
+        if not self.pk:
+            self.unpaid = self.transaction.value
+        else:
+            if not self.creditorpayment_set.all():
+                self.unpaid = self.transaction.value
+        super(CreditorInvoice, self).save(*args, **kwargs)
 
     def is_settled(self):
         if self.outstanding_balance():

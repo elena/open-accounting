@@ -11,3 +11,8 @@ class InvoiceQuerySet(models.query.QuerySet):
             return self.filter(relation=relation)
         return self.filter(unpaid__gt=0)
 
+
+class RelationQuerySet(models.query.QuerySet):
+
+    def active(self):
+        return self.filter(is_active=True)

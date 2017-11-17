@@ -4,7 +4,7 @@ from decimal import Decimal
 from django.db import models
 
 from subledgers.models import Invoice, Payment, Relation
-from subledgers.querysets import InvoiceQuerySet
+from subledgers.querysets import InvoiceQuerySet, RelationQuerySet
 from subledgers.settings import AGED_PERIODS
 
 
@@ -18,6 +18,8 @@ class Creditor(Relation):
     terms = models.IntegerField(default=14)  # settings.DEFAULT_TERMS)
 
 
+
+    objects = RelationQuerySet.as_manager()
 
     class Meta:
         ordering = ['entity__name']
@@ -78,6 +80,8 @@ class CreditorInvoice(SpecificRelation, Invoice):
 
     """ `Invoice` is `Entry` that has more details. """
 
+    objects = InvoiceQuerySet.as_manager()
+
     class Meta:
         ordering = ['transaction__date']
         unique_together = ("invoice_number", "relation")
@@ -132,9 +136,10 @@ class CreditorPayment(SpecificRelation, Payment):
 
     """
 
-    invoices = models.ManyToManyField('creditors.CreditorInvoice',
-                                      blank=True,
-                                      through='creditors.CreditorPaymentInvoice')
+    invoices = models.ManyToManyField(
+        'creditors.CreditorInvoice',
+        blank=True,
+        through='creditors.CreditorPaymentInvoice')
 
     def __str__(self):
         return "[{}] {} -- {} -- ${}".format(

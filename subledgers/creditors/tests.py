@@ -41,7 +41,7 @@ class TestCreditorInvoiceMethods(TestCase):
 
         trans_kwargs = {
             'user': self.user,
-            'date': date(2017,5,2),
+            'date': date(2017, 5, 2),
             'account_DR': self.a1,
             'account_CR': self.a2,
         }
@@ -49,37 +49,38 @@ class TestCreditorInvoiceMethods(TestCase):
         # banktransacion created, transaction matched
         # Payment 1
         trans_kwargs['value'] = Decimal(350)
-        trans_kwargs['source'] = get_source(BankLine)
-        self.b1 = BankLine(date=date(2017, 6, 16), value=trans_kwargs['value'],
-            bank_account=self.ba, line_dump='1', description='1')
+        self.b1 = BankLine(date=date(2017, 6, 16),
+                           value=trans_kwargs['value'],
+                           bank_account=self.ba,
+                           line_dump='1', description='1')
         self.b1.save()
         self.e1 = BankEntry(bank_line=self.b1)
         self.e1.save_transaction(trans_kwargs)
-        self.p1 = CreditorPayment(relation = self.creditor,
-            bank_entry = self.e1, user = self.user)
+
+        self.p1 = CreditorPayment(relation=self.creditor,
+                                  bank_entry=self.e1, user=self.user)
         self.p1.save()
 
         # Payment 2
         trans_kwargs['value'] = Decimal(20)
-        trans_kwargs['account_DR'] = self.a1
-        trans_kwargs['account_CR'] = self.a2
         self.b2 = BankLine(date=date(2017, 6, 16), value=trans_kwargs['value'],
-            bank_account=self.ba, line_dump='2', description='2')
+                           bank_account=self.ba,
+                           line_dump='2', description='2')
         self.b2.save()
         self.e2 = BankEntry(bank_line=self.b2)
+
         self.e2.save_transaction(trans_kwargs)
-        self.p2 = CreditorPayment(relation = self.creditor,
-            bank_entry = self.e2, user = self.user)
+        self.p2 = CreditorPayment(relation=self.creditor,
+                                  bank_entry=self.e2, user=self.user)
         self.p2.save()
 
-        for x in range(1,6):
+        for x in range(1, 6):
             trans_kwargs['value'] = 100.00
-            trans_kwargs['source'] = get_source(CreditorInvoice)
-            trans_kwargs['date'] = date(2017,5,2)-timedelta(days=x*30)
-            trans_kwargs['account_DR'] = self.a1
-            trans_kwargs['account_CR'] = self.a2
-            new_invoice = CreditorInvoice(
-                relation=self.creditor, invoice_number=x)
+            trans_kwargs['date'] = date(2017, 5, 2) - timedelta(days=x * 30)
+            trans_kwargs['invoice_number'] = x
+            trans_kwargs['relation'] = self.creditor
+            trans_kwargs['gst_total'] = 0.00
+            new_invoice = CreditorInvoice()
             new_invoice.save_transaction(trans_kwargs)
 
         # Intentionally leaving this here to see what's going on.
@@ -131,7 +132,7 @@ class TestCreditorInvoiceMethods(TestCase):
         i2 = CreditorInvoice.objects.get(
             relation=self.creditor, invoice_number='2')
         self.assertEqual(i2.outstanding_balance(), Decimal('30.00'))
-        
+
     def test_is_settled1(self):
         i1 = CreditorInvoice.objects.get(
             relation=self.creditor, invoice_number='1')
@@ -177,7 +178,7 @@ class TestCreditorInvoiceMethods(TestCase):
         i2 = CreditorInvoice.objects.get(
             relation=self.creditor, invoice_number='2')
         self.assertEqual(i2.is_settled(), False)
-        
+
 
 class TestCreditorPaymentMatchInvoiceMethod(TestCase):
 
@@ -209,15 +210,15 @@ class TestCreditorPaymentMatchInvoiceMethod(TestCase):
                               source="{}".format(BankAccount.__module__))
         self.t1.save(lines=lines)
         self.b1 = BankLine(date=date(2017, 6, 16), value=t1_value,
-                                  bank_account=self.ba,
-                                  line_dump='Test Transaction 1',
-                                  description='Test Transaction 1')
+                           bank_account=self.ba,
+                           line_dump='Test Transaction 1',
+                           description='Test Transaction 1')
         self.b1.save()
         self.e1 = BankEntry.objects.create(transaction=self.t1,
                                            bank_line=self.b1)
 
-        self.p1 = CreditorPayment(relation = self.creditor,
-            bank_entry = self.e1, user = self.user)
+        self.p1 = CreditorPayment(relation=self.creditor,
+                                  bank_entry=self.e1, user=self.user)
         self.p1.save()
 
         # Payment 2
@@ -227,20 +228,20 @@ class TestCreditorPaymentMatchInvoiceMethod(TestCase):
                               source="{}".format(BankAccount.__module__))
         self.t2.save(lines=lines)
         self.b2 = BankLine(date=date(2017, 6, 16), value=t2_value,
-                                  bank_account=self.ba,
-                                  line_dump='Test Transaction 2',
-                                  description='Test Transaction 2')
+                           bank_account=self.ba,
+                           line_dump='Test Transaction 2',
+                           description='Test Transaction 2')
         self.b2.save()
         self.e2 = BankEntry.objects.create(transaction=self.t2,
                                            bank_line=self.b2)
-        self.p2 = CreditorPayment(relation = self.creditor,
-            bank_entry = self.e2, user = self.user)
+        self.p2 = CreditorPayment(relation=self.creditor,
+                                  bank_entry=self.e2, user=self.user)
         self.p2.save()
 
-        for x in range(1,6):
+        for x in range(1, 6):
             new_transaction = Transaction(
                 user=self.user,
-                date=date(2017,5,2)-timedelta(days=x*30),
+                date=date(2017, 5, 2) - timedelta(days=x * 30),
                 source=get_source(CreditorInvoice))
             new_transaction.save(lines=(self.a1, self.a2, 100.00))
             new_invoice = CreditorInvoice(
@@ -295,3 +296,47 @@ class TestCreditorPaymentMatchInvoiceMethod(TestCase):
         i2 = CreditorInvoice.objects.get(
             relation=self.creditor, invoice_number='2')
         self.assertEqual(i2.unpaid, Decimal('30.00'))
+
+
+class TestCreditorInvoicesAgedMethod(TestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            'test_staff_user', 'test@example.com', '1234')
+        self.user.is_staff = True
+        self.user.save()
+
+        self.a1 = Account.objects.create(
+            element='01', number='0150', name='a1')
+        self.a2 = Account.objects.create(
+            element='01', number='0100', name='a2')
+
+        entity = Entity.objects.create(code='a', name='a')
+        self.creditor = Creditor.objects.create(entity=entity)
+
+        trans_kwargs = {
+            'user': self.user,
+            'date': date(2017, 5, 2),
+            'value': 1.00
+        }
+
+        for period in settings.AGED_PERIODS:
+            trans_kwargs['account_DR'] = self.a1
+            trans_kwargs['account_CR'] = self.a2
+            trans_kwargs['date'] = date.today() - timedelta(days=(period + 10))
+            new_invoice = CreditorInvoice(
+                relation=self.creditor,
+                invoice_number=period
+            )
+            new_invoice.save_transaction(trans_kwargs)
+
+        # Make additional record in last period
+        trans_kwargs['account_DR'] = self.a1
+        trans_kwargs['account_CR'] = self.a2
+        trans_kwargs['date'] = date.today() - timedelta(days=(period + 10))
+        new_invoice = CreditorInvoice(
+            relation=self.creditor,
+            invoice_number=period
+        )
+        new_invoice.save_transaction(trans_kwargs)
+

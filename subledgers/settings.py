@@ -87,8 +87,8 @@ SUBLEDGERS_AVAILABLE = {
 FIELDS_TRANSACTION_REQUIRED = ['date', 'user', 'source']
 
 FIELDS_ENTRY_REQUIRED = ['value']
-FIELDS_BANK_ENTRY_REQUIRED = ['bank_transaction_id']
-FIELDS_PAYMENT_REQUIRED = ['relation', 'bank_transaction_id']
+FIELDS_BANK_ENTRY_REQUIRED = []
+FIELDS_PAYMENT_REQUIRED = ['relation']
 FIELDS_INVOICE_REQUIRED = ['invoice_number', 'gst_total', 'relation']
 
 FIELD_IS_DATE = ['date']

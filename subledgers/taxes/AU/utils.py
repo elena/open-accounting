@@ -48,9 +48,6 @@ def process_tax(cls, kwargs, lines):
             # note: correct GST account, abs value
             # fix dr/cr +/- in next process, not here.
 
-            if kwargs.get('gst_total'):
-                gst_allocated = True
-
             if not kwargs['gst_total'] in ['', None, 0]:
                 if object_settings.get('is_tb_account_DR'):
                     lines.append((
@@ -60,6 +57,10 @@ def process_tax(cls, kwargs, lines):
                     lines.append((
                         settings.GST_CR_ACCOUNT,
                         utils.make_decimal(kwargs['gst_total'])))
+
+            if kwargs.get('gst_total'):
+                gst_allocated = True
+
         else:
             pass
 

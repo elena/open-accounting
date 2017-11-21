@@ -9,14 +9,13 @@ from ledgers.periods.models import CurrentFinancialYear
 class AccountSet(object):
 
     # pretty sure this is quite independant, could be put in utils instead
-    def get_accounts_set_year(self, fyear):
+    def get_accounts_set_year(self, months_list):
 
-        months_set = ["" for x in range(0, 12)]
         accounts_set = [
-            {'account': a, 'month': ["" for x in range(0, 13)]}
+            {'account': a, 'month': [
+                "" for x in range(0, len(months_list) + 1)]}
             for a in Account.objects.all().total()
             if a.total]
-        months_list = utils.get_months(fyear)
 
         for i, month in enumerate(months_list):
             for acc_year in accounts_set:
@@ -24,10 +23,10 @@ class AccountSet(object):
                     acc_year['account'].get_code())
                 if acc_mth:
                     acc_year['month'][i] = utils.make_CRDR(acc_mth.total)
-                    acc_year['month'][12] = utils.make_CRDR(
+                    acc_year['month'][len(months_list)] = utils.make_CRDR(
                         acc_year['account'].total)
 
-        return accounts_set, months_set
+        return accounts_set
 
 
 class TrialBalanceView(AccountSet, generic.list.ListView):
@@ -38,13 +37,15 @@ class TrialBalanceView(AccountSet, generic.list.ListView):
     def get_context_data(self, *args, **kwargs):
         context = super(TrialBalanceView, self).get_context_data(
             *args, **kwargs)
+        if self.kwargs.get('start') and self.kwargs.get('end'):
+            months_list = utils.get_months(
+                self.kwargs.get('start'), self.kwargs.get('end'))
+        else:
+            fyear = CurrentFinancialYear.objects.get().current_financial_year
+            months_list = utils.get_months_fyear(fyear)
 
-        fyear = CurrentFinancialYear.objects.get().current_financial_year
-        accounts_set, months_set = self.get_accounts_set_year(fyear)
-
-        context['accounts_set'] = accounts_set
-        context['months_set'] = months_set
-        context['months_headers'] = utils.get_months(fyear)
+        context['accounts_set'] = self.get_accounts_set_year(months_list)
+        context['months_headers'] = months_list
         return context
 
 

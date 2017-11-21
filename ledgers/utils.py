@@ -2,17 +2,16 @@
 import re
 import dateparser
 from datetime import date, datetime
+from dateutil.relativedelta import relativedelta
 from dateutil.rrule import rrule, MONTHLY
 from decimal import Decimal
 from django.utils.module_loading import import_string
 
-from ledgers.periods import settings
+from ledgers.periods import settings as period_settings
+from subledgers import settings as subledger_settings
 
 
-def get_months(fyear):
-    return [d.isoformat()[:7] for d in rrule(
-        MONTHLY, count=12,
-        dtstart=settings.FINANCIAL_YEARS[fyear][0])]
+# Classes
 
 
 def get_source(source):
@@ -70,6 +69,9 @@ def get_cls(name):
     raise Exception("No valid `type` found for {}.".format(name))
 
 
+# Dates
+
+
 def make_date(value):
     """ Open to serious integrity error because of USA v. ISO8601 date
     variation, eg: 5-2-2017 v. 2-5-2017 (May or Feb?).
@@ -82,18 +84,61 @@ def make_date(value):
     if type(value) == datetime:
         return value
 
+    if type(value) is str and len(value) == 8:
+        try:
+            return date(int(value[0:4]), int(value[4:6]), int(value[6:8]))
+        except ValueError:
+            pass
+
+    if type(value) is str and len(value) == 7:
+        try:
+            return date(int(value[0:4]), int(value[5:7]), 1)
+        except ValueError:
+            pass
+
+    if type(value) is str and len(value) == 6:
+        try:
+            return date(int(value[0:4]), int(value[4:6]), 1)
+        except ValueError:
+            pass
+
     month_as_word = re.sub(r'[^a-zA-Z.]', '', value)
     if not month_as_word:
         raise Exception(
             "Ambiguous date provided. Please provide month as word. eg: GOOD: 2-May-2017 BAD: 2017-02-05")  # noqa
+
     return dateparser.parse(value)
+
+
+def make_date_end(value):
+    end_date = make_date(value)
+    year, mth = end_date.year, end_date.month
+    return date(year, mth, monthrange(year, mth)[1])
+
+
+def get_months_fyear(fyear):
+    return [d.isoformat()[:7] for d in rrule(
+        MONTHLY, count=12,
+        dtstart=period_settings.FINANCIAL_YEARS[fyear][0])]
+
+
+def get_months(start, end):
+    months_list = []
+    start, end = make_date(start), make_date_end(end)
+    while start < end:
+        months_list.append(start.isoformat()[:7])
+        start = start + relativedelta(months=1)
+    return months_list
+
+
+# Numbers Formats
 
 
 def make_decimal(value):
     if value in ['', False, None]:
         value = 0
     try:
-        return round(Decimal(re.sub(r'[^\d\-.]', '', value)), 2)
+        return round(Decimal(re.sub(r'[^0-9\-.]', '', value)), 2)
     except TypeError:
         return round(Decimal(value), 2)
 
@@ -117,6 +162,8 @@ def make_CRDR(value):
     else:
         return '-{:,.2f} CR'.format(-value)
 
+
+# ===
 
 def tsv_to_dict(dump):
     """ Make a sensible k,v dict from imported tsv.

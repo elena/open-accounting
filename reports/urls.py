@@ -9,6 +9,10 @@ urls = [
         ledgers_views.TrialBalanceView.as_view(),
         name="trial-balance"),
 
+    url(r'^tb/(?P<start>[0-9\-]{7})/(?P<end>[0-9\-]{7})/$',
+        ledgers_views.TrialBalanceView.as_view(),
+        name="trial-balance-date"),
+
     url(r'^account/(?P<account>[0-9\-]+)/$',
         ledgers_views.AccountDetailView.as_view(),
         name='account-detailview'),

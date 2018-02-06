@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from datetime import date, timedelta
-from decimal import Decimal
 from django.db import models
 
 from subledgers.models import Invoice, Payment, Relation
@@ -13,7 +12,8 @@ class Creditor(Relation):
     simpler queries.
     """
 
-    entity = models.OneToOneField('entities.Entity', related_name='creditors')
+    entity = models.OneToOneField(
+        'entities.Entity', models.PROTECT, related_name='creditors')
 
     terms = models.IntegerField(default=14)  # settings.DEFAULT_TERMS)
 
@@ -54,9 +54,9 @@ class Creditor(Relation):
 
 class CreditorAccount(models.Model):
 
-    creditor = models.ForeignKey('creditors.Creditor')
+    creditor = models.ForeignKey('creditors.Creditor', models.CASCADE)
 
-    account = models.ForeignKey('ledgers.Account')
+    account = models.ForeignKey('ledgers.Account', models.CASCADE)
 
     order = models.CharField(max_length=16, default=0)
 
@@ -70,7 +70,7 @@ class SpecificRelation(Relation, models.Model):
     This will be convenient/less messy for queries later.
     """
 
-    relation = models.ForeignKey('creditors.Creditor')
+    relation = models.ForeignKey('creditors.Creditor', models.PROTECT)
 
     class Meta:
         abstract = True
@@ -202,9 +202,9 @@ class CreditorPayment(SpecificRelation, Payment):
 
 class CreditorPaymentInvoice(models.Model):
 
-    payment = models.ForeignKey('creditors.CreditorPayment')
+    payment = models.ForeignKey('creditors.CreditorPayment', models.CASCADE)
 
-    invoice = models.ForeignKey('creditors.CreditorInvoice')
+    invoice = models.ForeignKey('creditors.CreditorInvoice', models.CASCADE)
 
     value = models.DecimalField(max_digits=19, decimal_places=2)
 
@@ -217,13 +217,15 @@ class CreditorLearning(models.Model):
 
     word = models.CharField(max_length=64, unique=True)
 
-    creditor = models.ForeignKey('creditors.Creditor')
+    creditor = models.ForeignKey('creditors.Creditor', models.CASCADE)
+
 
 
 class CreditorMatch(models.Model):
 
-    bank_entry = models.ForeignKey('bank_reconciliations.BankEntry')
+    bank_entry = models.ForeignKey(
+        'bank_reconciliations.BankEntry', models.CASCADE)
 
     description = models.CharField(max_length=512)
 
-    creditor = models.ForeignKey('creditors.Creditor')
+    creditor = models.ForeignKey('creditors.Creditor', models.CASCADE)

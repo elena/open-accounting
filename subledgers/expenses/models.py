@@ -6,4 +6,4 @@ from ..models import Entry
 class Expense(Entry):
 
     relation = models.ForeignKey(
-        'entities.Entity', default='', blank=True, null=True)
+        'entities.Entity', models.PROTECT, default='', blank=True, null=True)

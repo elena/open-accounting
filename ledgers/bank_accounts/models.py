@@ -22,7 +22,9 @@ BANKS = [
 
 class BankAccount(models.Model):
 
-    account = models.OneToOneField('ledgers.Account', null=False, related_name="bankaccounts")
+    account = models.OneToOneField('ledgers.Account',
+                                   models.PROTECT,
+                                   null=False, related_name="bankaccounts")
 
     bank = models.CharField(max_length=8, choices=BANKS, blank=True,
                             null=True, default=None,

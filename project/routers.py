@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from django.conf.urls import url
+from django.urls import path
 
 from rest_framework import routers
 
@@ -11,13 +11,13 @@ from subledgers.bank_reconciliations import views as bank_reconciliations_views
 
 additional_routing_patterns = [
 
-    url(r'^bank-reconciliations/(?P<pk>[0-9]+)/$',
-        bank_reconciliations_views.BankLineViewSet.as_view({
-            'get': 'retrieve',
-            'put': 'update',
-            'post': 'update',
-            'patch': 'partial_update'})
-        ),
+    path('bank-reconciliations/<int:pk>/',
+         bank_reconciliations_views.BankLineViewSet.as_view({
+             'get': 'retrieve',
+             'put': 'update',
+             'post': 'update',
+             'patch': 'partial_update'})
+         ),
 ]
 
 

@@ -6,8 +6,7 @@ from ..models import Entry
 class JournalEntry(Entry):
 
     relation = models.ForeignKey(
-        'entities.Entity',
-        default="", blank=True, null=True)
+        'entities.Entity', models.PROTECT, default="", blank=True, null=True)
 
     class Meta:
         verbose_name_plural = "journal entries"

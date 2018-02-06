@@ -10,7 +10,7 @@ class BankEntry(Entry):
     """ Inherits attribute `ledger.Transaction` from `subledger.Entry`. """
 
     bank_line = models.OneToOneField(
-        'bank_reconciliations.BankLine')
+        'bank_reconciliations.BankLine', models.CASCADE)
 
     subledger = models.CharField(
         max_length=50,
@@ -37,8 +37,9 @@ class BankLine(models.Model):
     Transaction can be created using the details  provided from statement.
     """
 
-    bank_account = models.ForeignKey('bank_accounts.BankAccount',
-                                     related_name='banktransactions')
+    bank_account = models.ForeignKey(
+        'bank_accounts.BankAccount', models.PROTECT,
+        related_name='banktransactions')
 
     # ~~ fields from dump ~~
 
@@ -98,4 +99,5 @@ class BankLearning(models.Model):
 
     word = models.CharField(max_length=64)
 
-    account = models.ForeignKey('ledgers.Account')
+    account = models.ForeignKey(
+        'ledgers.Account', models.CASCADE)

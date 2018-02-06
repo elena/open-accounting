@@ -29,8 +29,9 @@ class Entry(models.Model):
     For use with at least: Sales, Expenses
     """
 
-    transaction = models.OneToOneField('ledgers.Transaction',
-                                       blank=True, default="", null=True)
+    transaction = models.OneToOneField(
+        'ledgers.Transaction', models.CASCADE, blank=True, default="",
+        null=True)
 
     additional = models.CharField(
         max_length=128, blank=True, default="", null=True)
@@ -535,7 +536,7 @@ class Payment(models.Model):
 
     bank_entry = models.OneToOneField(
         'bank_reconciliations.BankEntry',
-        default='', blank=True, null=True)
+        models.CASCADE, default='', blank=True, null=True)
 
     # ---
     # Minimum required fields for object.
@@ -559,7 +560,7 @@ class Payment(models.Model):
     # For our internal use/reference.
 
     # could be useful to know who matched/created the payment object
-    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, models.PROTECT)
 
     created_at = models.DateTimeField(auto_now_add=True)
 

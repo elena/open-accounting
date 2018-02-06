@@ -66,7 +66,8 @@ class Account(models.Model):
 
     element = models.CharField(max_length=2, choices=ELEMENTS)
 
-    parent = models.ForeignKey('self', null=True, blank=True, default=None,
+    parent = models.ForeignKey('self', models.SET_NULL,
+                               null=True, blank=True, default=None,
                                related_name="parent+")
 
     number = models.CharField(max_length=4, blank=True, default=None)
@@ -213,6 +214,7 @@ class Transaction(models.Model):
     # For our internal use/reference.
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             models.PROTECT,
                              related_name="transactions")
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -362,10 +364,11 @@ class Line(models.Model):
 
     Correct DR/CR value to be calculated in relevant view or subledger.
     """
-    transaction = models.ForeignKey(
-        Transaction, null=False, related_name="lines")
+    transaction = models.ForeignKey(Transaction, models.CASCADE,
+                                    null=False, related_name="lines")
 
-    account = models.ForeignKey(Account, null=False, related_name="lines")
+    account = models.ForeignKey(Account, models.PROTECT,
+                                null=False, related_name="lines")
 
     value = models.DecimalField(max_digits=19, decimal_places=2)
 

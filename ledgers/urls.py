@@ -1,14 +1,12 @@
-from django.conf.urls import include, url
+from django.urls import path
 
 from . import views
 
 
-urls = [
+app_name = 'ledgers'
 
-    url(r'^accounts/$',
-        views.AccountListView.as_view(),
-        name="accounts-list"),
-
+urlpatterns = [
+    path('accounts/',
+         views.AccountListView.as_view(),
+         name="accounts-list"),
 ]
-
-urlpatterns = [url(r'^', include(urls, namespace='ledgers'))]

@@ -2,7 +2,7 @@
 with Subledgers
 
 Version: 0.0.1a <br>
-Current Django version: 1.11.2  <br>
+Current Django version: 1.11.16  <br>
 Author: Elena Williams
 
 For quick-start accounting for people who have been forced to do a lot of it,
